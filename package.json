@@ -1,7 +1,7 @@
 {
-  "name": "enjoyyourlife",
+  "name": "le-reste-de-ta-vie",
   "version": "1.0.0",
-  "description": "Votre vie en semaines : espérance de vie, événements et temps qu'il reste avec vos proches.",
+  "description": "Ta vie en semaines : espérance de vie, années en bonne santé, événements et temps qu'il te reste avec tes proches.",
   "private": true,
   "license": "GPL-3.0-or-later",
   "scripts": {

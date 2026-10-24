@@ -1,8 +1,9 @@
-/* Enjoy your life — interface. Les calculs sont dans life.js (window.Life). */
+/* Le reste de ta vie — interface. Les calculs sont dans life.js (window.Life). */
 (function () {
   'use strict';
 
   const L = window.Life;
+  // Clé d'origine (ancien nom de l'application), gardée pour ne pas perdre les données déjà enregistrées.
   const STORE_KEY = 'enjoyyourlife.v1';
   const COLORS = ['#d9485f', '#e8833a', '#d9a400', '#3fa34d', '#1f9e9a', '#3d7dd8', '#8e5cd9', '#d65db1'];
   const EMOJIS = ['⭐', '💍', '❤️', '👶', '🎓', '💼', '🏠', '✈️', '🎉', '🌱', '🏃', '🕊️'];
@@ -277,10 +278,10 @@
     $('#summary').innerHTML = `
       <div>
         <p class="eyebrow">${esc(formatParts(life.age, true))}${job}</p>
-        <p class="thesis">Vous avez vécu <b>${nf.format(life.weeksLived)}</b> semaines. Il vous en reste environ <b>${nf.format(life.weeksLeft)}</b>.</p>
+        <p class="thesis">Tu as vécu <b>${nf.format(life.weeksLived)}</b> semaines. Il t’en reste environ <b>${nf.format(life.weeksLeft)}</b>.</p>
       </div>
       <div class="lifebar">
-        <div class="lifebar-track" role="img" aria-label="${pct1.format(life.fraction)} de votre vie">
+        <div class="lifebar-track" role="img" aria-label="${pct1.format(life.fraction)} de ta vie">
           <span class="lifebar-fill" style="width:${(life.fraction * 100).toFixed(2)}%"></span>
           <span class="lifebar-h1" style="left:${disabledAt.toFixed(2)}%;width:${(severeAt - disabledAt).toFixed(2)}%"></span>
           <span class="lifebar-h2" style="left:${severeAt.toFixed(2)}%;width:${(100 - severeAt).toFixed(2)}%"></span>
@@ -288,7 +289,7 @@
         </div>
         <div class="lifebar-labels">
           <span>${dfLong.format(life.birth)}</span>
-          <span><strong>${pct1.format(life.fraction)}</strong> de votre vie</span>
+          <span><strong>${pct1.format(life.fraction)}</strong> de ta vie</span>
           <span>${dfMonth.format(life.death)}</span>
         </div>
         <p class="lifebar-note">En moyenne, encore <b>${yearsText(health.freeYears)}</b> sans incapacité, puis
@@ -297,11 +298,11 @@
       </div>
       <dl class="facts">
         <div><dt>Espérance de vie</dt><dd>${nf1.format(life.lifespan)} ans</dd><small>soit jusqu’en ${dfMonth.format(life.death)} environ</small></div>
-        <div><dt>Il vous reste</dt><dd>${esc(left)}</dd><small>soit ${nf.format(life.daysLeft)} jours</small></div>
+        <div><dt>Il te reste</dt><dd>${esc(left)}</dd><small>soit ${nf.format(life.daysLeft)} jours</small></div>
         <div><dt>Sans incapacité</dt><dd>${yearsText(health.freeYears)}</dd><small>en moyenne, jusqu’en ${dfMonth.format(health.freeEnd)}</small></div>
         <div><dt>Sans incapacité forte</dt><dd>${yearsText(health.severeFreeYears)}</dd><small>en moyenne, jusqu’en ${dfMonth.format(health.severeFreeEnd)}</small></div>
         <div><dt>Encore</dt><dd>${plural(life.summers, 'été', 'étés')}</dd><small>et ${plural(life.christmases, 'Noël', 'Noëls')}</small></div>
-        <div><dt>Si votre vie était une journée</dt><dd>${clock}</dd><small>${moment}</small></div>
+        <div><dt>Si ta vie était une journée</dt><dd>${clock}</dd><small>${moment}</small></div>
       </dl>`;
   }
 
@@ -425,19 +426,19 @@
   function showCell(i) {
     const box = $('#cell-info');
     if (i == null) {
-      box.innerHTML = `<div class="muted">Survolez ou touchez une semaine pour la voir en détail. Touchez-la à nouveau pour y ajouter un événement.</div>`;
+      box.innerHTML = `<div class="muted">Survole ou touche une semaine pour la voir en détail. Touche-la à nouveau pour y ajouter un événement.</div>`;
       return;
     }
     const { life, now, cells } = view;
     if (i < cells.birth.index) {
-      box.innerHTML = `<div class="muted">Avant votre naissance.</div>`;
+      box.innerHTML = `<div class="muted">Avant ta naissance.</div>`;
       return;
     }
     const y = Math.floor(i / L.WEEKS), w = i % L.WEEKS;
     const range = cells.scheme.weekRange(life.birth, y, w);
     const last = range.end - L.DAY;
     const when = i === cells.now.index ? 'cette semaine' : relative(range.start, now);
-    const status = i > cells.death.index ? ' · au-delà de votre espérance de vie' : '';
+    const status = i > cells.death.index ? ' · au-delà de ton espérance de vie' : '';
     const title = cells.mode === 'calendar'
       ? `${cells.birthYear + y}, semaine ${w + 1}`
       : `${y === 0 ? 'Première année' : plural(y, 'an', 'ans')}, semaine ${w + 1}`;
@@ -472,11 +473,11 @@
   function relationEndText(rel, tl) {
     if (tl.endReason === 'fixed') return `jusqu’au ${dfLong.format(tl.end)}`;
     if (tl.endReason === 'other') return `jusqu’en ${new Date(tl.end).getUTCFullYear()}, selon l’espérance de vie de ${esc(rel.name)} (${nf1.format(tl.otherLifespan)} ans)`;
-    return `jusqu’en ${new Date(tl.end).getUTCFullYear()}, la fin de votre vie estimée`;
+    return `jusqu’en ${new Date(tl.end).getUTCFullYear()}, la fin de ta vie estimée`;
   }
 
   function phaseWhen(rel, tl, phase, index) {
-    const who = (n) => tl.refKind === 'other' ? `ses ${nf.format(n)} ans` : tl.refKind === 'self' ? `vos ${nf.format(n)} ans` : `${plural(n, 'an', 'ans')} de relation`;
+    const who = (n) => tl.refKind === 'other' ? `ses ${nf.format(n)} ans` : tl.refKind === 'self' ? `tes ${nf.format(n)} ans` : `${plural(n, 'an', 'ans')} de relation`;
     const prev = index > 0 ? tl.phases[index - 1].until : null;
     let label;
     if (phase.until == null) label = prev == null ? 'toute la relation' : `à partir de ${who(prev)}`;
@@ -490,7 +491,7 @@
     if (!state.relations.length) {
       box.innerHTML = `
         <div class="empty">
-          <p>Ajoutez vos enfants, votre conjoint, vos parents ou vos amis pour voir combien de jours il vous reste à passer ensemble.</p>
+          <p>Ajoute tes enfants, ton conjoint ou ta conjointe, tes parents ou tes amis pour voir combien de jours il vous reste à passer ensemble.</p>
           <button type="button" class="btn btn-small" data-action="add-rel">Ajouter un proche</button>
         </div>`;
       return;
@@ -567,7 +568,7 @@
     if (!state.events.length) {
       box.innerHTML = `
         <div class="empty">
-          <p>Ajoutez un mariage, un diplôme, un déménagement ou un projet : il apparaîtra sur la grille.</p>
+          <p>Ajoute un mariage, un diplôme, un déménagement ou un projet : il apparaîtra sur la grille.</p>
           <button type="button" class="btn btn-small" data-action="add-ev">Ajouter un événement</button>
         </div>`;
       return;
@@ -592,7 +593,7 @@
     };
     box.innerHTML = [
       upcoming.length ? `<div class="ev-group"><h3>À venir</h3><ul>${upcoming.map(row).join('')}</ul></div>` : '',
-      past.length ? `<div class="ev-group"><h3>Derrière vous</h3><ul>${past.map(row).join('')}</ul></div>` : '',
+      past.length ? `<div class="ev-group"><h3>Derrière toi</h3><ul>${past.map(row).join('')}</ul></div>` : '',
     ].join('');
   }
 
@@ -767,8 +768,8 @@
       const parts = [];
       if (cat) parts.push(`Catégorie trouvée : ${L.CATEGORIES.find((c) => c.id === cat).label}.`);
       if (sector && f.sector.value === sector) parts.push(`Secteur : ${L.SECTORS.find((s) => s.id === sector).label}.`);
-      if (parts.length) parts.push('Vous pouvez les changer ci-dessous.');
-      if (!cat && f.job.value.trim()) parts.push('Choisissez la catégorie qui correspond le mieux à ce métier.');
+      if (parts.length) parts.push('Tu peux les changer ci-dessous.');
+      if (!cat && f.job.value.trim()) parts.push('Choisis la catégorie qui correspond le mieux à ce métier.');
       f.jobHint.textContent = parts.length ? parts.join(' ') : defaultHint;
       refresh();
     });
@@ -858,9 +859,9 @@
     e.preventDefault();
     const p = readProfileForm();
     const birth = L.parseDate(p.birth);
-    if (birth == null) return showError($('#pf-error'), 'Indiquez votre date de naissance.');
+    if (birth == null) return showError($('#pf-error'), 'Indique ta date de naissance.');
     if (birth > L.today()) return showError($('#pf-error'), 'La date de naissance ne peut pas être dans le futur.');
-    if (birth < L.parseDate('1900-01-01')) return showError($('#pf-error'), 'Indiquez une date de naissance après 1900.');
+    if (birth < L.parseDate('1900-01-01')) return showError($('#pf-error'), 'Indique une date de naissance après 1900.');
     if (state.demo) {
       state.relations = state.relations.filter((r) => !r.demo);
       state.events = state.events.filter((ev) => !ev.demo);
@@ -918,9 +919,9 @@
       color: (document.querySelector('input[name="ev-color"]:checked') || {}).value || COLORS[0],
     };
     const err = $('#ev-error');
-    if (!ev.title) return showError(err, 'Donnez un titre à l’événement.');
-    if (!isDate(ev.start)) return showError(err, 'Choisissez une date.');
-    if (type === 'period' && !isDate(ev.end)) return showError(err, 'Choisissez la date de fin de la période.');
+    if (!ev.title) return showError(err, 'Donne un titre à l’événement.');
+    if (!isDate(ev.start)) return showError(err, 'Choisis une date.');
+    if (type === 'period' && !isDate(ev.end)) return showError(err, 'Choisis la date de fin de la période.');
     if (type === 'period' && ev.end < ev.start) return showError(err, 'La fin doit venir après le début.');
     const old = state.events.find((x) => x.id === ev.id);
     if (old) Object.assign(old, ev, { demo: old.demo });
@@ -1026,7 +1027,7 @@
     $('#rel-start-label').textContent = type.startLabel;
     $('#rel-birth-field').hidden = kind === 'child';
     $('#rel-life-hint').textContent = kind === 'child'
-      ? 'Les étapes suivent l’âge de votre enfant. Une naissance à venir fonctionne aussi. Son métier, une fois adulte, affine son espérance de vie.'
+      ? 'Les étapes suivent l’âge de ton enfant. Une naissance à venir fonctionne aussi. Son métier, une fois adulte, affine son espérance de vie.'
       : 'Sa date de naissance, son métier et son secteur servent à estimer son espérance de vie, donc le temps que vous aurez ensemble.';
     if (applyPreset) {
       rel.ref.value = type.ref;
@@ -1093,11 +1094,11 @@
       color: (document.querySelector('input[name="rel-color"]:checked') || {}).value || COLORS[0],
     };
     const err = $('#rel-error');
-    if (!r.name) return showError(err, 'Indiquez son prénom.');
-    if (!isDate(r.start)) return showError(err, `Indiquez la date : ${L.RELATION_TYPES[kind].startLabel.toLowerCase()}.`);
+    if (!r.name) return showError(err, 'Indique son prénom.');
+    if (!isDate(r.start)) return showError(err, `Indique la date : ${L.RELATION_TYPES[kind].startLabel.toLowerCase()}.`);
     if (r.otherBirth && !isDate(r.otherBirth)) return showError(err, 'Sa date de naissance n’est pas valide.');
     if (r.end && r.end <= r.start) return showError(err, 'La fin de la relation doit venir après son début.');
-    if (!r.phases.length) return showError(err, 'Ajoutez au moins une étape.');
+    if (!r.phases.length) return showError(err, 'Ajoute au moins une étape.');
     const old = state.relations.find((x) => x.id === r.id);
     if (old) Object.assign(old, r, { demo: old.demo });
     else state.relations.push(r);
@@ -1110,7 +1111,7 @@
     const r = state.relations.find((x) => x.id === editingRel);
     if (!r) return;
     closeDialog($('#dlg-rel'));
-    if (await confirmAction(`Retirer ${r.name} de vos proches ?`, 'Retirer')) {
+    if (await confirmAction(`Retirer ${r.name} de tes proches ?`, 'Retirer')) {
       state.relations = state.relations.filter((x) => x.id !== r.id);
       if (ui.focus === r.id) ui.focus = null;
       save();
@@ -1121,11 +1122,11 @@
   /* ---------- Sauvegarde ---------- */
 
   $('#btn-export').addEventListener('click', () => {
-    const data = { app: 'enjoyyourlife', version: 1, exported: new Date().toISOString(), ...state };
+    const data = { app: 'lerestedetavie', version: 1, exported: new Date().toISOString(), ...state };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `enjoy-your-life-${L.toISO(L.today())}.json`;
+    a.download = `le-reste-de-ta-vie-${L.toISO(L.today())}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -1141,7 +1142,7 @@
       try { next = cleanState(JSON.parse(reader.result)); } catch (err) { next = null; }
       const msg = $('#data-msg');
       if (!next) {
-        showError(msg, 'Ce fichier n’est pas une sauvegarde Enjoy your life valide.');
+        showError(msg, 'Ce fichier n’est pas une sauvegarde valide de l’application Le reste de ta vie.');
       } else {
         state = next;
         ui.focus = null;
@@ -1158,7 +1159,7 @@
 
   $('#btn-reset').addEventListener('click', async () => {
     closeDialog($('#dlg-data'));
-    if (await confirmAction('Effacer votre profil, vos proches et vos événements de ce navigateur ? Cette action est définitive.', 'Tout effacer')) {
+    if (await confirmAction('Effacer ton profil, tes proches et tes événements de ce navigateur ? Cette action est définitive.', 'Tout effacer')) {
       try { localStorage.removeItem(STORE_KEY); } catch (err) { /* rien à effacer */ }
       state = demoState();
       ui.focus = null;

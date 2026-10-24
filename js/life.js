@@ -1,5 +1,5 @@
 /*
- * Enjoy your life — calculs sans dépendance :
+ * Le reste de ta vie — calculs sans dépendance :
  * dates, espérance de vie, grille des semaines et temps passé avec ses proches.
  * Utilisable dans le navigateur (window.Life) comme dans Node (require).
  */
@@ -423,9 +423,9 @@
    * Relations : le temps passé ensemble.
    *
    * Une relation est découpée en étapes ; chaque étape dure jusqu'à un
-   * certain âge (de la personne, le vôtre, ou depuis le début de la
+   * certain âge (de la personne, le tien, ou depuis le début de la
    * relation) et compte un nombre de jours passés ensemble par an.
-   * La relation s'arrête à la première des fins : la vôtre, la sienne
+   * La relation s'arrête à la première des fins : la tienne, la sienne
    * (espérance de vie estimée) ou une date de fin choisie.
    * ------------------------------------------------------------------ */
 
@@ -443,7 +443,7 @@
 
   const REFS = {
     other: 'son âge',
-    self: 'votre âge',
+    self: 'ton âge',
     start: 'années depuis le début',
   };
 
@@ -512,7 +512,7 @@
   function relationTimeline(rel, profile, now) {
     const type = RELATION_TYPES[rel.kind] || RELATION_TYPES.other;
     const myBirth = parseDate(profile.birth);
-    // Le temps ensemble ne commence au plus tôt qu'à votre naissance.
+    // Le temps ensemble ne commence au plus tôt qu'à ta naissance.
     const start = Math.max(parseDate(rel.start), myBirth);
     const otherBirth = rel.kind === 'child' ? parseDate(rel.start) : parseDate(rel.otherBirth);
 

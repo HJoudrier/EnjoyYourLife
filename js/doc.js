@@ -1,4 +1,4 @@
-/* Enjoy your life — documentation : les tableaux sont calculés à partir de life.js, pour rester fidèles à l'application. */
+/* Le reste de ta vie — documentation : les tableaux sont calculés à partir de life.js, pour rester fidèles à l'application. */
 (function () {
   'use strict';
 

@@ -1,26 +1,26 @@
-# Enjoy your life
+# Le reste de ta vie
 
-Une application simple pour voir où vous en êtes de votre vie.
+Une application simple pour voir où tu en es de ta vie. Aujourd’hui en est le premier jour.
 
-Vous indiquez votre date de naissance, votre sexe et votre métier. L’application estime votre espérance de vie et dessine votre vie entière : **une ligne par année, un carré par semaine**, de la naissance jusqu’à l’âge estimé du décès. Les semaines vécues sont remplies, la semaine en cours est marquée en rouge, celles qui restent sont vides.
+Tu indiques ta date de naissance, ton sexe et ton métier. L’application estime ton espérance de vie et dessine ta vie entière : **une ligne par année, un carré par semaine**, de la naissance jusqu’à l’âge estimé du décès. Les semaines vécues sont remplies, la semaine en cours est marquée en rouge, celles qui restent sont vides.
 
-Elle indique aussi combien de ces années vous vivrez en moyenne **sans incapacité** et **sans incapacité forte** : sur la grille, les semaines où l’on vit en moyenne avec une incapacité, puis une incapacité forte, sont teintées. À droite de chaque ligne, un pourcentage donne vos **chances d’atteindre cet âge**. La grille continue au-delà de l’espérance de vie, jusqu’à l’âge que vous avez moins d’une chance sur dix d’atteindre.
+Elle indique aussi combien de ces années tu vivras en moyenne **sans incapacité** et **sans incapacité forte** : sur la grille, les semaines où l’on vit en moyenne avec une incapacité, puis une incapacité forte, sont teintées. À droite de chaque ligne, un pourcentage donne tes **chances d’atteindre cet âge**. La grille continue au-delà de l’espérance de vie, jusqu’à l’âge que tu as moins d’une chance sur dix d’atteindre.
 
-Vous pouvez ensuite :
+Tu peux ensuite :
 
 - **ajouter des événements** passés ou à venir (mariage, diplôme, déménagement, voyage, retraite…), ponctuels ou sur une période, qui apparaissent sur la grille ;
-- **ajouter vos proches** (enfants, conjoint, parents, frères et sœurs, grands-parents, amis) et voir, pour chacun :
+- **ajouter tes proches** (enfants, conjoint, parents, frères et sœurs, grands-parents, amis) et voir, pour chacun :
   - la part du temps passé ensemble qui est déjà derrière vous ;
   - le nombre de jours qu’il vous reste à passer ensemble, en années et en jours ;
   - ces semaines sur la grille, plus ou moins foncées selon la fréquence à laquelle vous vous voyez.
 
-Pour chaque proche, vous pouvez indiquer sa date de naissance, son sexe, son métier et son secteur d’activité. Ils servent à estimer son espérance de vie, et donc combien de temps vous aurez ensemble.
+Pour chaque proche, tu peux indiquer sa date de naissance, son sexe, son métier et son secteur d’activité. Ils servent à estimer son espérance de vie, et donc combien de temps vous aurez ensemble.
 
 Par exemple, un enfant vit à la maison jusqu’à 18 ans, rentre le week-end pendant ses études, puis passe une fois par mois. À 7 ans, il a déjà vécu un tiers du temps que vous passerez ensemble, alors que seulement 12 % de votre relation s’est écoulée. Avec un parent, à 35 ans, c’est souvent plus de 90 %.
 
 ## Utilisation
 
-Aucune installation ni dépendance : ouvrez `index.html` dans un navigateur.
+Aucune installation ni dépendance : ouvre `index.html` dans un navigateur.
 
 Pour la servir en local :
 
@@ -28,13 +28,13 @@ Pour la servir en local :
 npm start          # puis http://localhost:8000
 ```
 
-Au premier lancement, l’application montre un exemple (Camille, infirmière née en 1991). Cliquez sur **Commencer avec ma vie** pour saisir votre profil ; les exemples disparaissent.
+Au premier lancement, l’application montre un exemple (Camille, infirmière née en 1991). Clique sur **Commencer avec ma vie** pour saisir ton profil ; les exemples disparaissent.
 
-Sur la grille, choisissez d’aligner les lignes sur vos anniversaires ou sur les 1er janvier. Survolez ou touchez une semaine pour voir ses dates et ses événements ; touchez-la une seconde fois pour y ajouter un événement. Au clavier : flèches pour se déplacer, Entrée pour ajouter, Échap pour quitter la vue d’un proche.
+Sur la grille, choisis d’aligner les lignes sur tes anniversaires ou sur les 1er janvier. Survole ou touche une semaine pour voir ses dates et ses événements ; touche-la une seconde fois pour y ajouter un événement. Au clavier : flèches pour se déplacer, Entrée pour ajouter, Échap pour quitter la vue d’un proche.
 
-### Vos données
+### Tes données
 
-Tout reste dans votre navigateur (`localStorage`). Rien n’est envoyé sur Internet. Le bouton **Sauvegarde** permet de télécharger vos données dans un fichier JSON, de les réimporter sur un autre appareil ou de tout effacer.
+Tout reste dans ton navigateur (`localStorage`). Rien n’est envoyé sur Internet. Le bouton **Sauvegarde** permet de télécharger tes données dans un fichier JSON, de les réimporter sur un autre appareil ou de tout effacer.
 
 ## Comment c’est calculé
 
@@ -49,9 +49,9 @@ La mortalité suit un modèle de Gompertz-Makeham, μ(x) = A + B·e^(c·x), cali
 | Femmes | 85,9 ans | 27,9 ans |
 | Hommes | 80,3 ans | 23,9 ans |
 
-L’espérance de vie est **conditionnelle à votre âge** : une personne de 70 ans a déjà franchi les risques des âges précédents et vivra en moyenne plus longtemps que l’espérance de vie à la naissance.
+L’espérance de vie est **conditionnelle à ton âge** : une personne de 70 ans a déjà franchi les risques des âges précédents et vivra en moyenne plus longtemps que l’espérance de vie à la naissance.
 
-Le **métier** est rattaché à sa catégorie socioprofessionnelle (nomenclature Insee). L’écart d’espérance de vie à 35 ans entre cette catégorie et l’ensemble de la population (Insee, 2020-2022) est appliqué au modèle. Par exemple, chez les hommes, les cadres vivent en moyenne 5,3 ans de plus que les ouvriers ; chez les femmes, l’écart est de 3,4 ans. Ces écarts se réduisent avec l’âge : à 60 ans, l’Insee ne mesure plus que 3,6 ans d’écart chez les hommes et 2,3 ans chez les femmes. Le modèle reproduit ces deux mesures en atténuant l’effet du métier après 60 ans, ce qui compte surtout pour les parents et grands-parents. Si le métier n’est pas reconnu, choisissez la catégorie à la main. « Non précisé » pour le sexe fait la moyenne des deux.
+Le **métier** est rattaché à sa catégorie socioprofessionnelle (nomenclature Insee). L’écart d’espérance de vie à 35 ans entre cette catégorie et l’ensemble de la population (Insee, 2020-2022) est appliqué au modèle. Par exemple, chez les hommes, les cadres vivent en moyenne 5,3 ans de plus que les ouvriers ; chez les femmes, l’écart est de 3,4 ans. Ces écarts se réduisent avec l’âge : à 60 ans, l’Insee ne mesure plus que 3,6 ans d’écart chez les hommes et 2,3 ans chez les femmes. Le modèle reproduit ces deux mesures en atténuant l’effet du métier après 60 ans, ce qui compte surtout pour les parents et grands-parents. Si le métier n’est pas reconnu, choisis la catégorie à la main. « Non précisé » pour le sexe fait la moyenne des deux.
 
 Le **secteur d’activité** est un ajustement indicatif. Aucune statistique publiée ne donne l’espérance de vie par secteur. Santé publique France (programme Cosmop) observe en revanche davantage de décès dans la construction, l’industrie et les transports, et moins dans l’agriculture, l’enseignement et certains services. Les écarts ci-dessous suivent ce sens, mais leurs valeurs sont des estimations propres à l’application, limitées à un an. Ils s’ajoutent à l’écart du métier.
 
@@ -68,7 +68,7 @@ Le **secteur d’activité** est un ajustement indicatif. Aucune statistique pub
 
 Le métier saisi propose automatiquement une catégorie et, quand il ne fait guère de doute, un secteur : « maçon » donne ouvrier et construction, « infirmière » donne profession intermédiaire et santé. Les deux restent modifiables.
 
-Le même calcul s’applique à vous et à vos proches. Un curseur d’**ajustement personnel** (de −10 à +10 ans) permet en plus de tenir compte de votre santé ou de votre hygiène de vie.
+Le même calcul s’applique à toi et à tes proches. Un curseur d’**ajustement personnel** (de −10 à +10 ans) permet en plus de tenir compte de ta santé ou de ton hygiène de vie.
 
 ### Années en bonne santé
 
@@ -79,11 +79,11 @@ L’espérance de vie sans incapacité compte les années vécues sans être lim
 | Femmes | 64,1 ans | 11,8 ans | 77,5 ans | 18,5 ans |
 | Hommes | 63,7 ans | 10,5 ans | 73,8 ans | 15,8 ans |
 
-Chiffres 2024, sauf l’incapacité forte à la naissance (2023). Comme l’espérance de vie, ces durées tiennent compte de votre âge, de votre sexe, de votre métier, de votre secteur et de l’ajustement personnel. L’application les présente comme des périodes : d’abord les années sans incapacité, puis celles avec une incapacité, dont les dernières avec une incapacité forte. C’est une façon de lire une moyenne : en réalité, une incapacité peut survenir plus tôt, plus tard, ou disparaître.
+Chiffres 2024, sauf l’incapacité forte à la naissance (2023). Comme l’espérance de vie, ces durées tiennent compte de ton âge, de ton sexe, de ton métier, de ton secteur et de l’ajustement personnel. L’application les présente comme des périodes : d’abord les années sans incapacité, puis celles avec une incapacité, dont les dernières avec une incapacité forte. C’est une façon de lire une moyenne : en réalité, une incapacité peut survenir plus tôt, plus tard, ou disparaître.
 
 ### Chances d’atteindre un âge
 
-Le pourcentage à droite de chaque ligne est la probabilité d’être encore en vie au début de cette ligne : à votre anniversaire, ou au 1er janvier si la grille suit les années civiles. Il se calcule en enchaînant les risques de décès de chaque tranche d’âge : les chances d’atteindre 80 ans sont les chances de passer l’année suivante, multipliées par celles de passer l’année d’après, et ainsi de suite jusqu’à 80 ans. Les risques viennent du même modèle de mortalité que l’espérance de vie, si bien que la somme de ces chances redonne les années qu’il vous reste. Au survol d’une semaine à venir, l’application affiche ces chances et le risque de décès dans l’année à cet âge.
+Le pourcentage à droite de chaque ligne est la probabilité d’être encore en vie au début de cette ligne : à ton anniversaire, ou au 1er janvier si la grille suit les années civiles. Il se calcule en enchaînant les risques de décès de chaque tranche d’âge : les chances d’atteindre 80 ans sont les chances de passer l’année suivante, multipliées par celles de passer l’année d’après, et ainsi de suite jusqu’à 80 ans. Les risques viennent du même modèle de mortalité que l’espérance de vie, si bien que la somme de ces chances redonne les années qu’il te reste. Au survol d’une semaine à venir, l’application affiche ces chances et le risque de décès dans l’année à cet âge.
 
 Sur mobile, seuls les pourcentages des lignes multiples de 5 sont affichés.
 
@@ -104,24 +104,24 @@ Sources :
 
 Toutes les lignes sont identiques : 52 carrés de même taille, sans espace supplémentaire. Un réglage au-dessus de la grille choisit sur quoi les aligner :
 
-- **vos années de vie** (par défaut) : la semaine *n* de l’année d’âge *a* commence *n* × 7 jours après votre *a*-ième anniversaire. La 52ᵉ semaine dure jusqu’à l’anniversaire suivant, si bien que chaque ligne correspond exactement à une année de votre vie. La marge indique l’âge tous les 5 ans.
-- **les années civiles** : chaque ligne va du 1er janvier au 31 décembre, la semaine *n* commence *n* × 7 jours après le 1er janvier et la 52ᵉ va jusqu’au 31 décembre. La première ligne commence à votre semaine de naissance. La marge indique l’année tous les 5 ans et l’en-tête les mois.
+- **tes années de vie** (par défaut) : la semaine *n* de l’année d’âge *a* commence *n* × 7 jours après ton *a*-ième anniversaire. La 52ᵉ semaine dure jusqu’à l’anniversaire suivant, si bien que chaque ligne correspond exactement à une année de ta vie. La marge indique l’âge tous les 5 ans.
+- **les années civiles** : chaque ligne va du 1er janvier au 31 décembre, la semaine *n* commence *n* × 7 jours après le 1er janvier et la 52ᵉ va jusqu’au 31 décembre. La première ligne commence à ta semaine de naissance. La marge indique l’année tous les 5 ans et l’en-tête les mois.
 
-Le réglage est enregistré avec vos données. Changer d’alignement garde la semaine sélectionnée.
+Le réglage est enregistré avec tes données. Changer d’alignement garde la semaine sélectionnée.
 
 ### Le temps ensemble
 
-Une relation est découpée en **étapes**. Chaque étape dure jusqu’à un âge (celui de la personne, le vôtre, ou un nombre d’années depuis le début de la relation) et compte un nombre de jours passés ensemble par an : tous les jours (365), tous les week-ends (104), une fois par mois (12), etc. Toutes les étapes sont modifiables.
+Une relation est découpée en **étapes**. Chaque étape dure jusqu’à un âge (celui de la personne, le tien, ou un nombre d’années depuis le début de la relation) et compte un nombre de jours passés ensemble par an : tous les jours (365), tous les week-ends (104), une fois par mois (12), etc. Toutes les étapes sont modifiables.
 
-La relation s’arrête à la première de ces dates : la fin de votre vie estimée, la fin de vie estimée de la personne (si vous indiquez sa date de naissance) ou une date de fin que vous choisissez.
+La relation s’arrête à la première de ces dates : la fin de ta vie estimée, la fin de vie estimée de la personne (si tu indiques sa date de naissance) ou une date de fin que tu choisis.
 
 | Lien | Étapes proposées |
 |---|---|
 | Enfant | à la maison jusqu’à ses 18 ans (tous les jours), études jusqu’à 23 ans (week-ends), puis une fois par mois |
 | Conjoint ou conjointe | vie commune, tous les jours |
-| Parent | à la maison jusqu’à vos 18 ans, études jusqu’à 23 ans (week-ends), puis une fois par mois |
-| Frère ou sœur | sous le même toit jusqu’à vos 18 ans, puis tous les deux mois |
-| Grand-parent | deux fois par mois jusqu’à vos 18 ans, puis quelques fois par an |
+| Parent | à la maison jusqu’à tes 18 ans, études jusqu’à 23 ans (week-ends), puis une fois par mois |
+| Frère ou sœur | sous le même toit jusqu’à tes 18 ans, puis tous les deux mois |
+| Grand-parent | deux fois par mois jusqu’à tes 18 ans, puis quelques fois par an |
 | Ami ou amie | deux fois par mois |
 
 ## Structure

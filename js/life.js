@@ -79,27 +79,35 @@
   /* ------------------------------------------------------------------ *
    * Espérance de vie
    *
-   * Mortalité de Gompertz-Makeham : μ(x) = A + k·B·e^(c·x), avec x l'âge.
+   * Mortalité de Gompertz-Makeham : μ(x) = A + k(x)·B·e^(c·x), avec x l'âge.
    * A, B et c sont calibrés pour reproduire les chiffres Insee 2025
    * (provisoires) de la France : espérance de vie à la naissance de
    * 80,3 ans (hommes) et 85,9 ans (femmes), à 60 ans de 23,9 et 27,9 ans.
-   * Le facteur k traduit l'écart lié à la catégorie socioprofessionnelle.
+   *
+   * Le facteur k traduit l'écart lié au métier et au secteur. Il est
+   * constant jusqu'à 60 ans puis s'estompe (k(x) = k^e^(−fade·(x−60))) :
+   * l'Insee mesure entre cadres et ouvriers un écart de 5,3 ans (hommes)
+   * et 3,4 ans (femmes) à 35 ans, mais de 3,6 et 2,3 ans à 60 ans
+   * (2020-2022). `fade` est calibré pour retrouver ces deux écarts.
    * ------------------------------------------------------------------ */
 
   const MORTALITY = {
-    M: { A: 0.0003, B: 3.0755766e-5, c: 0.091266456 },
-    F: { A: 0.0003, B: 3.6412485e-6, c: 0.11210149 },
+    M: { A: 0.0003, B: 3.0755766e-5, c: 0.091266456, fade: 0.0599188 },
+    F: { A: 0.0003, B: 3.6412485e-6, c: 0.11210149, fade: 0.10526 },
   };
   const STEP = 0.02;
   const MAX_AGE = 125;
+  const FADE_AGE = 60;
 
   // Espérance de vie résiduelle (en années) d'une personne qui a déjà `age` ans.
   function remainingYears(sex, age, k) {
     const p = MORTALITY[sex];
-    const factor = k == null ? 1 : k;
+    const logK = Math.log(k == null ? 1 : k);
     let alive = 1, sum = 0;
     for (let x = age; x < MAX_AGE && alive > 1e-7; x += STEP) {
-      const mu = p.A + factor * p.B * Math.exp(p.c * (x + STEP / 2));
+      const mid = x + STEP / 2;
+      const factor = Math.exp(mid <= FADE_AGE ? logK : logK * Math.exp(-p.fade * (mid - FADE_AGE)));
+      const mu = p.A + factor * p.B * Math.exp(p.c * mid);
       const next = alive * Math.exp(-mu * STEP);
       sum += ((alive + next) / 2) * STEP;
       alive = next;
@@ -124,15 +132,38 @@
     { id: 'ensemble', label: 'Autre ou non précisé', examples: 'moyenne nationale : étudiant, sans emploi, parent au foyer…' },
   ];
 
+  // Secteurs d'activité (grandes sections de la nomenclature NAF).
+  // Aucune source ne publie d'espérance de vie par secteur : les écarts
+  // ci-dessous (en années, à 35 ans) sont des estimations indicatives,
+  // limitées à un an. Ils suivent le sens des écarts de mortalité observés
+  // par Santé publique France (programme Cosmop) : davantage de décès dans
+  // la construction, l'industrie et les transports, moins dans l'agriculture,
+  // l'enseignement et certains services. Ils s'ajoutent à l'effet de la
+  // catégorie socioprofessionnelle.
+  const SECTORS = [
+    { id: '', label: 'Non précisé', gap: 0 },
+    { id: 'agriculture', label: 'Agriculture, forêt, pêche', gap: 0.5 },
+    { id: 'industrie', label: 'Industrie, énergie, mines', gap: -0.7 },
+    { id: 'construction', label: 'Construction, BTP', gap: -1 },
+    { id: 'commerce', label: 'Commerce, réparation automobile', gap: 0 },
+    { id: 'transport', label: 'Transports, logistique', gap: -0.7 },
+    { id: 'hotellerie', label: 'Hôtellerie, restauration', gap: -0.5 },
+    { id: 'numerique', label: 'Information, communication, numérique', gap: 0.3 },
+    { id: 'finance', label: 'Banque, assurance, immobilier', gap: 0.3 },
+    { id: 'services', label: 'Services aux entreprises', gap: 0 },
+    { id: 'public', label: 'Administration publique, défense', gap: 0 },
+    { id: 'enseignement', label: 'Enseignement, recherche', gap: 0.7 },
+    { id: 'sante', label: 'Santé, action sociale', gap: 0.3 },
+    { id: 'culture', label: 'Arts, spectacles, sport, associations', gap: 0 },
+  ];
+
   const factorCache = {};
 
-  // Multiplicateur k qui décale l'espérance de vie à 35 ans de l'écart Insee
-  // entre la catégorie et l'ensemble de la population.
-  function categoryFactor(sex, category) {
-    const key = sex + ':' + category;
+  // Multiplicateur k de la mortalité qui décale de `gap` années
+  // l'espérance de vie à 35 ans.
+  function gapFactor(sex, gap) {
+    const key = sex + ':' + gap;
     if (key in factorCache) return factorCache[key];
-    const table = E35[sex];
-    const gap = (table[category] == null ? table.ensemble : table[category]) - table.ensemble;
     if (gap === 0) return (factorCache[key] = 1);
     const target = remainingYears(sex, 35) + gap;
     let lo = 0.1, hi = 10;
@@ -144,15 +175,39 @@
     return (factorCache[key] = Math.sqrt(lo * hi));
   }
 
+  // Écart Insee entre la catégorie et l'ensemble de la population.
+  function categoryGap(sex, category) {
+    const table = E35[sex];
+    return (table[category] == null ? table.ensemble : table[category]) - table.ensemble;
+  }
+
+  function sectorGap(sector) {
+    const found = SECTORS.find((s) => s.id === (sector || ''));
+    return found ? found.gap : 0;
+  }
+
+  function categoryFactor(sex, category) {
+    return gapFactor(sex, categoryGap(sex, category));
+  }
+
+  function sectorFactor(sex, sector) {
+    return gapFactor(sex, sectorGap(sector));
+  }
+
+  // Les écarts du métier et du secteur s'additionnent.
+  function workFactor(sex, category, sector) {
+    return gapFactor(sex, Math.round((categoryGap(sex, category) + sectorGap(sector)) * 100) / 100);
+  }
+
   // Âge moyen au décès attendu (en années), sachant que la personne est en vie
-  // aujourd'hui. person = { birth, sex: 'F'|'M'|'X', category, adjust }.
+  // aujourd'hui. person = { birth, sex: 'F'|'M'|'X', category, sector, adjust }.
   function expectedLifespan(person, now) {
     const birth = parseDate(person.birth);
     const age = Math.max(0, (now - birth) / YEAR);
     const sexes = person.sex === 'F' || person.sex === 'M' ? [person.sex] : ['F', 'M'];
     const category = person.category || 'ensemble';
     let total = 0;
-    for (const s of sexes) total += remainingYears(s, age, categoryFactor(s, category));
+    for (const s of sexes) total += remainingYears(s, age, workFactor(s, category, person.sector));
     const years = age + total / sexes.length + (Number(person.adjust) || 0);
     return Math.max(years, age + 7 / 365.2425);
   }
@@ -318,8 +373,11 @@
 
     let end = deathDate(profile, now);
     let endReason = 'self';
+    let otherLifespan = null;
     if (otherBirth != null) {
-      const theirs = deathDate({ birth: otherBirth, sex: rel.otherSex }, now);
+      const other = { birth: otherBirth, sex: rel.otherSex, category: rel.category, sector: rel.sector };
+      otherLifespan = expectedLifespan(other, now);
+      const theirs = deathDate(other, now);
       if (theirs < end) { end = theirs; endReason = 'other'; }
     }
     const fixedEnd = parseDate(rel.end);
@@ -354,6 +412,7 @@
       end,
       endReason,
       otherBirth,
+      otherLifespan,
       refKind,
       phases,
       totalDays,
@@ -375,7 +434,8 @@
 
   /* ------------------------------------------------------------------ *
    * Métiers : on rattache un métier saisi librement à sa catégorie
-   * socioprofessionnelle (nomenclature Insee des PCS).
+   * socioprofessionnelle (nomenclature Insee des PCS) et, quand c'est
+   * clair, à son secteur d'activité le plus probable.
    * ------------------------------------------------------------------ */
 
   const JOB_KEYS = {
@@ -438,31 +498,105 @@
     return (text || '')
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
+      .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, ' ')
       .trim();
   }
 
+  // Métiers dont le secteur ne fait guère de doute.
+  const SECTOR_KEYS = {
+    agriculture: [
+      'agriculteur', 'agricultrice', 'eleveur', 'eleveuse', 'viticulteur', 'viticultrice', 'vigneron', 'vigneronne',
+      'maraicher', 'maraichere', 'arboriculteur', 'cerealier', 'exploitant agricole', 'exploitante agricole', 'paysan',
+      'paysanne', 'apiculteur', 'apicultrice', 'horticulteur', 'ostreiculteur', 'fermier', 'fermiere', 'ouvrier agricole',
+      'bucheron', 'forestier', 'pecheur', 'marin pecheur',
+    ],
+    industrie: [
+      'soudeur', 'chaudronnier', 'tourneur', 'fraiseur', 'usineur', 'regleur', 'operateur de production', 'mineur',
+      'chimiste', 'metallurgiste', 'ouvrier d usine', 'ouvrier en usine', 'technicien de maintenance industrielle',
+    ],
+    construction: [
+      'macon', 'plombier', 'electricien', 'menuisier', 'charpentier', 'couvreur', 'carreleur', 'plaquiste',
+      'peintre en batiment', 'chef de chantier', 'conducteur de travaux', 'grutier', 'terrassier', 'serrurier',
+      'vitrier', 'chauffagiste', 'ouvrier du batiment', 'ouvrier du btp', 'btp',
+    ],
+    commerce: [
+      'vendeur', 'vendeuse', 'caissier', 'caissiere', 'commercant', 'commercante', 'epicier', 'epiciere', 'libraire',
+      'fleuriste', 'boulanger', 'boulangere', 'boucher', 'bouchere', 'charcutier', 'garagiste', 'chef de rayon',
+      'hote de caisse', 'bijoutier', 'buraliste',
+    ],
+    transport: [
+      'chauffeur', 'routier', 'livreur', 'livreuse', 'cariste', 'manutentionnaire', 'magasinier', 'logisticien',
+      'preparateur de commandes', 'docker', 'pilote', 'steward', 'hotesse de l air', 'conducteur de train',
+      'conducteur de bus', 'conducteur de metro', 'taxi', 'coursier', 'demenageur', 'facteur', 'factrice',
+      'controleur sncf', 'aiguilleur', 'cheminot',
+    ],
+    hotellerie: [
+      'cuisinier', 'cuisiniere', 'chef cuisinier', 'serveur', 'serveuse', 'restaurateur', 'restauratrice', 'cafetier',
+      'hotelier', 'commis de cuisine', 'plongeur', 'barman', 'barmaid', 'femme de chambre', 'equipier',
+    ],
+    numerique: [
+      'developpeur', 'developpeuse', 'informaticien', 'informaticienne', 'data scientist', 'webdesigner',
+      'infographiste', 'journaliste', 'product manager', 'administrateur systeme', 'devops', 'technicien informatique',
+    ],
+    finance: [
+      'banquier', 'banquiere', 'trader', 'actuaire', 'assureur', 'agent immobilier', 'conseiller bancaire',
+      'conseillere bancaire', 'gestionnaire de patrimoine', 'courtier',
+    ],
+    services: [
+      'consultant', 'consultante', 'avocat', 'avocate', 'notaire', 'expert comptable', 'comptable', 'auditeur',
+      'auditrice', 'agent de securite', 'vigile', 'agent d entretien', 'agent de proprete', 'technicien de surface',
+      'interimaire', 'architecte', 'juriste',
+    ],
+    public: [
+      'policier', 'policiere', 'gendarme', 'militaire', 'soldat', 'pompier', 'fonctionnaire', 'agent territorial',
+      'magistrat', 'juge', 'diplomate', 'officier', 'douanier', 'douaniere', 'agent public',
+    ],
+    enseignement: [
+      'professeur', 'professeure', 'prof', 'enseignant', 'enseignante', 'instituteur', 'institutrice',
+      'maitre de conferences', 'chercheur', 'chercheuse', 'atsem', 'aesh', 'avs', 'cpe', 'surveillant',
+      'formateur', 'formatrice',
+    ],
+    sante: [
+      'medecin', 'chirurgien', 'infirmier', 'infirmiere', 'aide soignant', 'aide soignante', 'pharmacien',
+      'pharmacienne', 'dentiste', 'kine', 'kinesitherapeute', 'sage femme', 'orthophoniste', 'ergotherapeute',
+      'psychomotricien', 'dieteticien', 'osteopathe', 'podologue', 'manipulateur radio', 'ambulancier',
+      'preparateur en pharmacie', 'psychologue', 'psychiatre', 'auxiliaire de vie', 'aide a domicile',
+      'assistant social', 'assistante sociale', 'educateur', 'educatrice', 'assistant maternel',
+      'assistante maternelle', 'puericultrice', 'puericulteur', 'veterinaire', 'opticien', 'opticienne',
+    ],
+    culture: [
+      'artiste', 'musicien', 'musicienne', 'comedien', 'comedienne', 'acteur', 'actrice', 'ecrivain', 'auteur',
+      'autrice', 'realisateur', 'realisatrice', 'photographe', 'danseur', 'danseuse', 'sportif', 'sportive',
+      'coach sportif', 'animateur', 'animatrice', 'moniteur', 'monitrice',
+    ],
+  };
+
   // Les clés les plus longues d'abord, pour que « professeur des écoles »
   // l'emporte sur « professeur » et « ouvrier agricole » sur « ouvrier ».
-  const JOB_INDEX = Object.entries(JOB_KEYS)
-    .flatMap(([category, keys]) => keys.map((key) => ({ key, category })))
-    .sort((a, b) => b.key.length - a.key.length);
-
-  function matchJob(text) {
-    const words = ' ' + normalize(text) + ' ';
-    if (words.trim() === '') return null;
-    for (const { key, category } of JOB_INDEX) {
-      if (words.includes(' ' + key)) return category;
-    }
-    return null;
+  function keywordMatcher(groups) {
+    const index = Object.entries(groups)
+      .flatMap(([group, keys]) => keys.map((key) => ({ key, group })))
+      .sort((a, b) => b.key.length - a.key.length);
+    return function (text) {
+      const words = ' ' + normalize(text) + ' ';
+      if (words.trim() === '') return null;
+      for (const { key, group } of index) {
+        if (words.includes(' ' + key)) return group;
+      }
+      return null;
+    };
   }
+
+  const matchJob = keywordMatcher(JOB_KEYS);
+  const matchSector = keywordMatcher(SECTOR_KEYS);
 
   return {
     DAY,
     YEAR,
     WEEKS,
     CATEGORIES,
+    SECTORS,
     E35,
     FREQUENCIES,
     REFS,
@@ -479,6 +613,9 @@
     fullYears,
     remainingYears,
     categoryFactor,
+    sectorFactor,
+    sectorGap,
+    workFactor,
     expectedLifespan,
     deathDate,
     weekOf,
@@ -489,5 +626,6 @@
     ratioAt,
     normalize,
     matchJob,
+    matchSector,
   };
 });

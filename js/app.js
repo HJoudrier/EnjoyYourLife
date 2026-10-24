@@ -91,16 +91,16 @@
   }
 
   function demoState() {
-    const rel = (kind, data) => ({ id: uid(), demo: true, kind, ref: L.RELATION_TYPES[kind].ref, phases: clonePhases(kind), otherSex: 'X', ...data });
+    const rel = (kind, data) => ({ id: uid(), demo: true, kind, ref: L.RELATION_TYPES[kind].ref, phases: clonePhases(kind), otherSex: 'X', job: '', category: 'ensemble', sector: '', ...data });
     const ev = (data) => ({ id: uid(), demo: true, type: 'point', ...data });
     return {
       demo: true,
-      profile: { birth: '1991-04-17', sex: 'F', job: 'Infirmière', category: 'inter', adjust: 0 },
+      profile: { birth: '1991-04-17', sex: 'F', job: 'Infirmière', category: 'inter', sector: 'sante', adjust: 0 },
       relations: [
         rel('child', { name: 'Léa', start: '2019-09-03', otherSex: 'F', color: COLORS[4] }),
         rel('child', { name: 'Malo', start: '2022-02-11', otherSex: 'M', color: COLORS[1] }),
-        rel('partner', { name: 'Karim', start: '2013-06-21', otherBirth: '1989-11-02', otherSex: 'M', color: COLORS[0] }),
-        rel('parent', { name: 'Maman', start: '1991-04-17', otherBirth: '1963-08-30', otherSex: 'F', color: COLORS[6] }),
+        rel('partner', { name: 'Karim', start: '2013-06-21', otherBirth: '1989-11-02', otherSex: 'M', job: 'Électricien', category: 'ouvrier', sector: 'construction', color: COLORS[0] }),
+        rel('parent', { name: 'Maman', start: '1991-04-17', otherBirth: '1963-08-30', otherSex: 'F', job: 'Professeure des écoles', category: 'inter', sector: 'enseignement', color: COLORS[6] }),
       ],
       events: [
         ev({ type: 'period', title: 'Études d’infirmière', emoji: '🎓', start: '2009-09-01', end: '2012-07-06', color: COLORS[5] }),
@@ -114,18 +114,20 @@
 
   const isDate = (v) => typeof v === 'string' && L.parseDate(v) != null;
   const isColor = (v) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v);
+  const isCategory = (v) => L.CATEGORIES.some((c) => c.id === v);
+  const isSector = (v) => L.SECTORS.some((s) => s.id === v);
   const text = (v, max) => String(v == null ? '' : v).trim().slice(0, max);
 
   // Remet d'aplomb un état lu dans le navigateur ou dans une sauvegarde.
   function cleanState(raw) {
     if (!raw || typeof raw !== 'object' || !raw.profile || !isDate(raw.profile.birth)) return null;
     const p = raw.profile;
-    const category = L.CATEGORIES.some((c) => c.id === p.category) ? p.category : 'ensemble';
     const profile = {
       birth: p.birth,
       sex: ['F', 'M', 'X'].includes(p.sex) ? p.sex : 'X',
       job: text(p.job, 80),
-      category,
+      category: isCategory(p.category) ? p.category : 'ensemble',
+      sector: isSector(p.sector) ? p.sector : '',
       adjust: Math.max(-10, Math.min(10, Math.round(Number(p.adjust) || 0))),
     };
     const relations = (Array.isArray(raw.relations) ? raw.relations : [])
@@ -146,6 +148,9 @@
           start: r.start,
           otherBirth: kind !== 'child' && isDate(r.otherBirth) ? r.otherBirth : '',
           otherSex: ['F', 'M', 'X'].includes(r.otherSex) ? r.otherSex : 'X',
+          job: text(r.job, 80),
+          category: isCategory(r.category) ? r.category : 'ensemble',
+          sector: isSector(r.sector) ? r.sector : '',
           end: isDate(r.end) ? r.end : '',
           ref: L.REFS[r.ref] ? r.ref : L.RELATION_TYPES[kind].ref,
           phases: phases.length ? phases : clonePhases(kind),
@@ -365,7 +370,7 @@
 
   function relationEndText(rel, tl) {
     if (tl.endReason === 'fixed') return `jusqu’au ${dfLong.format(tl.end)}`;
-    if (tl.endReason === 'other') return `jusqu’en ${new Date(tl.end).getUTCFullYear()}, selon l’espérance de vie de ${esc(rel.name)}`;
+    if (tl.endReason === 'other') return `jusqu’en ${new Date(tl.end).getUTCFullYear()}, selon l’espérance de vie de ${esc(rel.name)} (${nf1.format(tl.otherLifespan)} ans)`;
     return `jusqu’en ${new Date(tl.end).getUTCFullYear()}, la fin de votre vie estimée`;
   }
 
@@ -441,7 +446,7 @@
           <div class="rel-head">
             <span class="dot"></span>
             <h3>${esc(rel.name)}</h3>
-            <span class="rel-kind">${esc(type.label)}${ageInfo}</span>
+            <span class="rel-kind">${esc(type.label)}${ageInfo}${rel.job ? ` · ${esc(rel.job)}` : ''}</span>
           </div>
           <div class="rel-share">${share}</div>
           <div class="rel-bar" aria-hidden="true">${seg.join('')}</div>
@@ -617,15 +622,75 @@
     return COLORS.find((c) => !used.has(c)) || COLORS[list.length % COLORS.length];
   }
 
+  /* ---------- Métier et secteur (profil et proches) ---------- */
+
+  const categoryOptions = L.CATEGORIES.map((c) => `<option value="${c.id}">${esc(c.label)}</option>`).join('');
+  const sectorOptions = L.SECTORS.map((s) => `<option value="${s.id}">${esc(s.label)}</option>`).join('');
+
+  function sectorHint(id) {
+    if (!id) return 'Facultatif. Son effet sur l’espérance de vie est une estimation indicative.';
+    const gap = L.sectorGap(id);
+    if (gap === 0) return 'Pas d’écart estimé pour ce secteur.';
+    return `Effet estimé : ${gap > 0 ? '+' : '−'}${nf.format(Math.abs(gap))} an (estimation indicative).`;
+  }
+
+  // Le métier saisi choisit la catégorie et, tant qu'on ne l'a pas choisi soi-même, le secteur.
+  function jobFields(f) {
+    f.category.innerHTML = categoryOptions;
+    f.sector.innerHTML = sectorOptions;
+    const defaultHint = f.jobHint.textContent;
+    const refresh = () => {
+      const cat = L.CATEGORIES.find((c) => c.id === f.category.value);
+      f.categoryHint.textContent = cat ? `Par exemple : ${cat.examples}.` : '';
+      f.sectorHint.textContent = sectorHint(f.sector.value);
+    };
+    f.job.addEventListener('input', () => {
+      const cat = L.matchJob(f.job.value);
+      const sector = L.matchSector(f.job.value);
+      if (cat) f.category.value = cat;
+      if (sector && (!f.sector.value || f.sector.dataset.auto)) {
+        f.sector.value = sector;
+        f.sector.dataset.auto = '1';
+      }
+      const parts = [];
+      if (cat) parts.push(`Catégorie trouvée : ${L.CATEGORIES.find((c) => c.id === cat).label}.`);
+      if (sector && f.sector.value === sector) parts.push(`Secteur : ${L.SECTORS.find((s) => s.id === sector).label}.`);
+      if (parts.length) parts.push('Vous pouvez les changer ci-dessous.');
+      if (!cat && f.job.value.trim()) parts.push('Choisissez la catégorie qui correspond le mieux à ce métier.');
+      f.jobHint.textContent = parts.length ? parts.join(' ') : defaultHint;
+      refresh();
+    });
+    f.category.addEventListener('change', refresh);
+    f.sector.addEventListener('change', () => { delete f.sector.dataset.auto; refresh(); });
+    return {
+      fill(p) {
+        f.job.value = p.job || '';
+        f.category.value = p.category || 'ensemble';
+        f.sector.value = p.sector || '';
+        delete f.sector.dataset.auto;
+        f.jobHint.textContent = defaultHint;
+        refresh();
+      },
+      read() {
+        return { job: text(f.job.value, 80), category: f.category.value, sector: f.sector.value };
+      },
+    };
+  }
+
   /* ---------- Profil ---------- */
 
   const pf = {
     birth: $('#pf-birth'),
-    job: $('#pf-job'),
-    category: $('#pf-category'),
     adjust: $('#pf-adjust'),
   };
-  pf.category.innerHTML = L.CATEGORIES.map((c) => `<option value="${c.id}">${esc(c.label)}</option>`).join('');
+  const pfJob = jobFields({
+    job: $('#pf-job'),
+    category: $('#pf-category'),
+    sector: $('#pf-sector'),
+    jobHint: $('#pf-job-hint'),
+    categoryHint: $('#pf-category-hint'),
+    sectorHint: $('#pf-sector-hint'),
+  });
   $('#job-list').innerHTML = [
     'Agriculteur, agricultrice', 'Aide-soignant, aide-soignante', 'Architecte', 'Artisan', 'Assistante maternelle',
     'Auxiliaire de vie', 'Avocat, avocate', 'Boulanger, boulangère', 'Caissier, caissière', 'Cadre', 'Chauffeur routier',
@@ -643,16 +708,13 @@
     return {
       birth: pf.birth.value,
       sex: sex ? sex.value : 'X',
-      job: text(pf.job.value, 80),
-      category: pf.category.value,
+      ...pfJob.read(),
       adjust: Number(pf.adjust.value) || 0,
     };
   }
 
   function updateProfilePreview() {
     const p = readProfileForm();
-    const cat = L.CATEGORIES.find((c) => c.id === p.category);
-    $('#pf-category-hint').textContent = cat ? `Par exemple : ${cat.examples}.` : '';
     const adj = p.adjust;
     $('#pf-adjust-out').textContent = adj === 0 ? 'aucun' : `${adj > 0 ? '+' : '−'}${plural(Math.abs(adj), 'an', 'ans')}`;
     const birth = L.parseDate(p.birth);
@@ -667,31 +729,18 @@
   }
 
   function openProfile() {
-    const p = state.demo ? { birth: '', sex: '', job: '', category: 'ensemble', adjust: 0 } : state.profile;
+    const p = state.demo ? { birth: '', sex: '', job: '', category: 'ensemble', sector: '', adjust: 0 } : state.profile;
     pf.birth.value = p.birth;
     pf.birth.max = L.toISO(L.today());
     document.querySelectorAll('input[name="sex"]').forEach((r) => { r.checked = r.value === p.sex; });
-    pf.job.value = p.job;
-    pf.category.value = p.category;
+    pfJob.fill(p);
     pf.adjust.value = p.adjust;
-    $('#pf-job-hint').textContent = 'Retraité ou retraitée : indiquez votre dernier métier.';
     showError($('#pf-error'), '');
     updateProfilePreview();
     openDialog($('#dlg-profile'));
   }
 
-  pf.job.addEventListener('input', () => {
-    const cat = L.matchJob(pf.job.value);
-    if (cat) {
-      pf.category.value = cat;
-      const label = L.CATEGORIES.find((c) => c.id === cat).label;
-      $('#pf-job-hint').textContent = `Catégorie trouvée : ${label}. Vous pouvez la changer ci-dessous.`;
-    } else if (pf.job.value.trim()) {
-      $('#pf-job-hint').textContent = 'Choisissez la catégorie qui correspond le mieux à ce métier.';
-    }
-    updateProfilePreview();
-  });
-  ['input', 'change'].forEach((type) => $('#form-profile').addEventListener(type, (e) => { if (e.target !== pf.job) updateProfilePreview(); }));
+  ['input', 'change'].forEach((type) => $('#form-profile').addEventListener(type, updateProfilePreview));
 
   $('#form-profile').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -792,6 +841,14 @@
     ref: $('#rel-ref'),
     phases: $('#rel-phases'),
   };
+  const relJob = jobFields({
+    job: $('#rel-job'),
+    category: $('#rel-category'),
+    sector: $('#rel-sector'),
+    jobHint: $('#rel-job-hint'),
+    categoryHint: $('#rel-category-hint'),
+    sectorHint: $('#rel-sector-hint'),
+  });
   rel.kind.innerHTML = Object.entries(L.RELATION_TYPES).map(([id, t]) => `<option value="${id}">${esc(t.label)}</option>`).join('');
   rel.ref.innerHTML = Object.entries(L.REFS).map(([id, label]) => `<option value="${id}">${esc(label)}</option>`).join('');
 
@@ -857,8 +914,8 @@
     $('#rel-start-label').textContent = type.startLabel;
     $('#rel-birth-field').hidden = kind === 'child';
     $('#rel-life-hint').textContent = kind === 'child'
-      ? 'Les étapes suivent l’âge de votre enfant. Une naissance à venir fonctionne aussi.'
-      : 'Sa date de naissance sert à estimer combien de temps vous aurez ensemble.';
+      ? 'Les étapes suivent l’âge de votre enfant. Une naissance à venir fonctionne aussi. Son métier, une fois adulte, affine son espérance de vie.'
+      : 'Sa date de naissance, son métier et son secteur servent à estimer son espérance de vie, donc le temps que vous aurez ensemble.';
     if (applyPreset) {
       rel.ref.value = type.ref;
       renderPhases(clonePhases(kind));
@@ -867,6 +924,21 @@
     }
   }
   rel.kind.addEventListener('change', () => syncRelKind(true));
+
+  function updateRelPreview() {
+    const out = $('#rel-preview');
+    const birth = rel.kind.value === 'child' ? rel.start.value : rel.birth.value;
+    if (!isDate(birth)) {
+      out.textContent = '';
+      return;
+    }
+    const sex = (document.querySelector('input[name="otherSex"]:checked') || {}).value || 'X';
+    const person = { birth, sex, ...relJob.read() };
+    const now = L.today();
+    const name = text(rel.name.value, 40) || 'cette personne';
+    out.innerHTML = `Espérance de vie estimée de ${esc(name)} : <strong>${nf1.format(L.expectedLifespan(person, now))} ans</strong>, soit jusqu’en ${dfMonth.format(L.deathDate(person, now))} environ.`;
+  }
+  ['input', 'change'].forEach((type) => $('#form-rel').addEventListener(type, updateRelPreview));
 
   function openRel(r) {
     editingRel = r ? r.id : null;
@@ -878,6 +950,7 @@
     rel.end.value = r ? r.end : '';
     const sex = r ? r.otherSex : 'X';
     document.querySelectorAll('input[name="otherSex"]').forEach((x) => { x.checked = x.value === sex; });
+    relJob.fill(r || {});
     syncRelKind(!r);
     if (r) {
       rel.ref.value = r.ref;
@@ -886,6 +959,7 @@
     swatches($('#rel-color'), 'rel-color', r ? r.color : nextColor(state.relations));
     $('#rel-delete').hidden = !r;
     showError($('#rel-error'), '');
+    updateRelPreview();
     openDialog($('#dlg-rel'));
     rel.name.focus();
   }
@@ -900,6 +974,7 @@
       start: rel.start.value,
       otherBirth: kind === 'child' ? '' : rel.birth.value,
       otherSex: (document.querySelector('input[name="otherSex"]:checked') || {}).value || 'X',
+      ...relJob.read(),
       end: rel.end.value,
       ref: rel.ref.value,
       phases: readPhases(),

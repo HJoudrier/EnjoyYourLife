@@ -76,7 +76,7 @@
   </main>
 
   <footer class="foot">
-    <p>Espérance de vie estimée à partir des données Insee : tables de mortalité 2025 (provisoires) et écarts par catégorie socioprofessionnelle 2020-2022. C’est une moyenne statistique, pas une prédiction. Vos données restent dans ce navigateur.</p>
+    <p>Espérance de vie estimée à partir des données Insee : tables de mortalité 2025 (provisoires) et écarts par catégorie socioprofessionnelle 2020-2022. L’effet du secteur d’activité est une estimation indicative, limitée à un an. C’est une moyenne statistique, pas une prédiction. Vos données restent dans ce navigateur.</p>
   </footer>
 
   <!-- Profil -->
@@ -105,6 +105,11 @@
         <span>Catégorie socioprofessionnelle</span>
         <select id="pf-category" name="category"></select>
         <small class="hint" id="pf-category-hint"></small>
+      </label>
+      <label class="field">
+        <span>Secteur d’activité</span>
+        <select id="pf-sector" name="sector"></select>
+        <small class="hint" id="pf-sector-hint"></small>
       </label>
       <label class="field">
         <span>Ajustement personnel : <output id="pf-adjust-out" for="pf-adjust">0 an</output></span>
@@ -201,7 +206,25 @@
           <input type="date" id="rel-end" name="end">
         </label>
       </div>
-      <small class="hint" id="rel-life-hint">Sa date de naissance sert à estimer combien de temps vous aurez ensemble.</small>
+      <div class="field-row">
+        <label class="field">
+          <span>Son métier <em>(facultatif)</em></span>
+          <input type="text" id="rel-job" name="job" list="job-list" autocomplete="off" maxlength="80" placeholder="Par exemple : professeure, maçon">
+          <small class="hint" id="rel-job-hint">S’il ou elle est à la retraite, son dernier métier.</small>
+        </label>
+        <label class="field">
+          <span>Catégorie socioprofessionnelle</span>
+          <select id="rel-category" name="category"></select>
+          <small class="hint" id="rel-category-hint"></small>
+        </label>
+      </div>
+      <label class="field">
+        <span>Secteur d’activité</span>
+        <select id="rel-sector" name="sector"></select>
+        <small class="hint" id="rel-sector-hint"></small>
+      </label>
+      <small class="hint" id="rel-life-hint">Sa date de naissance, son métier et son secteur servent à estimer son espérance de vie, donc le temps que vous aurez ensemble.</small>
+      <p class="preview" id="rel-preview"></p>
 
       <fieldset class="field phases-field">
         <legend>Les étapes de la relation</legend>

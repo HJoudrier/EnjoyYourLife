@@ -124,3 +124,54 @@ test('rattachement d’un métier à sa catégorie', () => {
   assert.equal(Life.matchJob('astronaute'), null);
   assert.equal(Life.matchJob(''), null);
 });
+
+test('le secteur d’activité décale l’espérance de vie à 35 ans de son écart indicatif', () => {
+  for (const sex of ['M', 'F']) {
+    const base = Life.remainingYears(sex, 35);
+    for (const sector of Life.SECTORS) {
+      assert.ok(Math.abs(sector.gap) <= 1, `écart limité à un an : ${sector.id}`);
+      near(Life.remainingYears(sex, 35, Life.sectorFactor(sex, sector.id)), base + sector.gap, 0.01, `${sex} ${sector.id}`);
+    }
+    const both = Life.workFactor(sex, 'ouvrier', 'construction');
+    const expected = base + Life.E35[sex].ouvrier - Life.E35[sex].ensemble + Life.sectorGap('construction');
+    near(Life.remainingYears(sex, 35, both), expected, 0.01, `${sex} ouvrier du BTP`);
+  }
+  assert.equal(Life.sectorFactor('M', ''), 1);
+  assert.equal(Life.sectorFactor('M', undefined), 1);
+  assert.equal(Life.sectorFactor('M', 'inconnu'), 1);
+});
+
+test('le métier et le secteur d’un proche comptent dans son espérance de vie', () => {
+  const now = d('2026-10-24');
+  const profile = { birth: '1991-04-17', sex: 'F' };
+  const base = { kind: 'parent', start: '1991-04-17', otherBirth: '1960-03-01', otherSex: 'M', phases: Life.RELATION_TYPES.parent.phases };
+  const average = Life.relationTimeline(base, profile, now);
+  const builder = Life.relationTimeline({ ...base, category: 'ouvrier', sector: 'construction' }, profile, now);
+  const teacher = Life.relationTimeline({ ...base, category: 'cadre', sector: 'enseignement' }, profile, now);
+  assert.equal(average.endReason, 'other');
+  assert.ok(builder.otherLifespan < average.otherLifespan && average.otherLifespan < teacher.otherLifespan);
+  assert.ok(builder.end < average.end && average.end < teacher.end);
+  assert.ok(builder.futureDays < teacher.futureDays);
+  near(average.otherLifespan, Life.expectedLifespan({ birth: '1960-03-01', sex: 'M' }, now), 1e-9, 'sans métier : la moyenne');
+});
+
+test('rattachement d’un métier à son secteur', () => {
+  assert.equal(Life.matchSector('Maçon'), 'construction');
+  assert.equal(Life.matchSector('Infirmière'), 'sante');
+  assert.equal(Life.matchSector('professeur des écoles'), 'enseignement');
+  assert.equal(Life.matchSector('chauffeur routier'), 'transport');
+  assert.equal(Life.matchSector('conducteur de travaux'), 'construction');
+  assert.equal(Life.matchSector('ouvrier agricole'), 'agriculture');
+  assert.equal(Life.matchSector('Développeuse web'), 'numerique');
+  assert.equal(Life.matchSector('cadre'), null);
+  assert.equal(Life.matchSector(''), null);
+});
+
+test('l’écart entre cadres et ouvriers se réduit avec l’âge comme le mesure l’Insee', () => {
+  for (const [sex, at35, at60] of [['M', 5.3, 3.6], ['F', 3.4, 2.3]]) {
+    const gap = (age) => Life.remainingYears(sex, age, Life.categoryFactor(sex, 'cadre')) - Life.remainingYears(sex, age, Life.categoryFactor(sex, 'ouvrier'));
+    near(gap(35), at35, 0.02, `${sex} à 35 ans`);
+    near(gap(60), at60, 0.05, `${sex} à 60 ans`);
+    assert.ok(gap(80) < gap(60), `${sex} : l’écart continue de se réduire`);
+  }
+});

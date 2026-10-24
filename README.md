@@ -12,6 +12,8 @@ Vous pouvez ensuite :
   - le nombre de jours qu’il vous reste à passer ensemble, en années et en jours ;
   - ces semaines sur la grille, plus ou moins foncées selon la fréquence à laquelle vous vous voyez.
 
+Pour chaque proche, vous pouvez indiquer sa date de naissance, son sexe, son métier et son secteur d’activité. Ils servent à estimer son espérance de vie, et donc combien de temps vous aurez ensemble.
+
 Par exemple, un enfant vit à la maison jusqu’à 18 ans, rentre le week-end pendant ses études, puis passe une fois par mois. À 7 ans, il a déjà vécu un tiers du temps que vous passerez ensemble, alors que seulement 12 % de votre relation s’est écoulée. Avec un parent, à 35 ans, c’est souvent plus de 90 %.
 
 ## Utilisation
@@ -45,9 +47,24 @@ La mortalité suit un modèle de Gompertz-Makeham, μ(x) = A + B·e^(c·x), cali
 
 L’espérance de vie est **conditionnelle à votre âge** : une personne de 70 ans a déjà franchi les risques des âges précédents et vivra en moyenne plus longtemps que l’espérance de vie à la naissance.
 
-Le **métier** est rattaché à sa catégorie socioprofessionnelle (nomenclature Insee). L’écart d’espérance de vie à 35 ans entre cette catégorie et l’ensemble de la population (Insee, 2020-2022) est appliqué au modèle. Par exemple, chez les hommes, les cadres vivent en moyenne 5,3 ans de plus que les ouvriers ; chez les femmes, l’écart est de 3,4 ans. Si le métier n’est pas reconnu, choisissez la catégorie à la main. « Non précisé » pour le sexe fait la moyenne des deux.
+Le **métier** est rattaché à sa catégorie socioprofessionnelle (nomenclature Insee). L’écart d’espérance de vie à 35 ans entre cette catégorie et l’ensemble de la population (Insee, 2020-2022) est appliqué au modèle. Par exemple, chez les hommes, les cadres vivent en moyenne 5,3 ans de plus que les ouvriers ; chez les femmes, l’écart est de 3,4 ans. Ces écarts se réduisent avec l’âge : à 60 ans, l’Insee ne mesure plus que 3,6 ans d’écart chez les hommes et 2,3 ans chez les femmes. Le modèle reproduit ces deux mesures en atténuant l’effet du métier après 60 ans, ce qui compte surtout pour les parents et grands-parents. Si le métier n’est pas reconnu, choisissez la catégorie à la main. « Non précisé » pour le sexe fait la moyenne des deux.
 
-Un curseur d’**ajustement personnel** (de −10 à +10 ans) permet de tenir compte de votre santé ou de votre hygiène de vie.
+Le **secteur d’activité** est un ajustement indicatif. Aucune statistique publiée ne donne l’espérance de vie par secteur. Santé publique France (programme Cosmop) observe en revanche davantage de décès dans la construction, l’industrie et les transports, et moins dans l’agriculture, l’enseignement et certains services. Les écarts ci-dessous suivent ce sens, mais leurs valeurs sont des estimations propres à l’application, limitées à un an. Ils s’ajoutent à l’écart du métier.
+
+| Secteur | Écart à 35 ans |
+|---|---|
+| Construction, BTP | −1 an |
+| Industrie, énergie, mines | −0,7 an |
+| Transports, logistique | −0,7 an |
+| Hôtellerie, restauration | −0,5 an |
+| Commerce, réparation automobile ; services aux entreprises ; administration publique, défense ; arts, spectacles, sport, associations | 0 |
+| Information, communication, numérique ; banque, assurance, immobilier ; santé, action sociale | +0,3 an |
+| Agriculture, forêt, pêche | +0,5 an |
+| Enseignement, recherche | +0,7 an |
+
+Le métier saisi propose automatiquement une catégorie et, quand il ne fait guère de doute, un secteur : « maçon » donne ouvrier et construction, « infirmière » donne profession intermédiaire et santé. Les deux restent modifiables.
+
+Le même calcul s’applique à vous et à vos proches. Un curseur d’**ajustement personnel** (de −10 à +10 ans) permet en plus de tenir compte de votre santé ou de votre hygiène de vie.
 
 Ce n’est qu’une moyenne statistique, pas une prédiction. Le modèle utilise la mortalité observée aujourd’hui et ne tient pas compte des progrès futurs, qui allongeront probablement la vie des plus jeunes.
 
@@ -56,6 +73,8 @@ Sources :
 - [Espérance de vie à divers âges, 1994-2025](https://www.insee.fr/fr/statistiques/2416631), Insee
 - [Bilan démographique 2025](https://www.insee.fr/fr/statistiques/8719824), Insee Première n° 2087
 - [Espérance de vie par catégorie socioprofessionnelle, 2020-2022](https://www.insee.fr/fr/statistiques/8220688), Insee Première n° 2005
+- [L’espérance de vie par niveau de vie et catégorie sociale](https://www.cor-retraites.fr/sites/default/files/2025-02/1.%20Insee_cor_esperance%20de%20vie_avec%20annexe.pdf), Insee pour le Conseil d’orientation des retraites, 2025 (écarts à 60 ans)
+- [Cosmop : analyse de la mortalité par secteurs d’activité économique](https://www.santepubliquefrance.fr/docs/article/cosmop-analyse-de-la-mortalite-par-secteurs-dactivite-economique), Santé publique France
 
 ### La grille
 
@@ -81,7 +100,7 @@ La relation s’arrête à la première de ces dates : la fin de votre vie estim
 ```
 index.html        la page
 css/style.css     la mise en forme (thèmes clair et sombre)
-js/life.js        les calculs : dates, espérance de vie, grille, temps ensemble, métiers
+js/life.js        les calculs : dates, espérance de vie, grille, temps ensemble, métiers et secteurs
 js/app.js         l’interface
 tests/            tests des calculs
 ```
@@ -92,7 +111,7 @@ tests/            tests des calculs
 npm test
 ```
 
-Les tests (Node 18 ou plus, sans dépendance) vérifient notamment que le modèle retrouve les chiffres de l’Insee, que chaque date tombe dans la bonne semaine de la grille et que le temps passé avec un proche est bien réparti entre ses étapes.
+Les tests (Node 18 ou plus, sans dépendance) vérifient notamment que le modèle retrouve les chiffres de l’Insee (y compris les écarts par catégorie à 35 et 60 ans), que chaque date tombe dans la bonne semaine de la grille, que le métier et le secteur d’un proche changent bien la durée de la relation et que le temps passé ensemble est bien réparti entre les étapes.
 
 ## Licence
 

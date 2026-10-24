@@ -34,22 +34,23 @@
     <section class="life" aria-labelledby="life-title">
       <div class="life-head">
         <h2 id="life-title">Une ligne par année, un carré par semaine</h2>
-        <ul class="legend" id="legend">
-          <li><i class="sw sw-past"></i>Vécue</li>
-          <li><i class="sw sw-now"></i>Cette semaine</li>
-          <li><i class="sw sw-future"></i>À venir</li>
-          <li><i class="sw sw-beyond"></i>Au-delà de l’espérance de vie</li>
-        </ul>
+        <div class="grid-settings" role="radiogroup" aria-labelledby="grid-mode-label">
+          <span id="grid-mode-label">Aligner les semaines sur</span>
+          <span class="segmented">
+            <label><input type="radio" name="grid-mode" value="life" id="gm-life" checked><span>vos années de vie</span></label>
+            <label><input type="radio" name="grid-mode" value="calendar" id="gm-calendar"><span>les années civiles</span></label>
+          </span>
+        </div>
       </div>
+      <ul class="legend" id="legend">
+        <li><i class="sw sw-past"></i>Vécue</li>
+        <li><i class="sw sw-now"></i>Cette semaine</li>
+        <li><i class="sw sw-future"></i>À venir</li>
+        <li><i class="sw sw-beyond"></i>Au-delà de l’espérance de vie</li>
+      </ul>
       <div class="focus-bar" id="focus-bar" hidden></div>
       <div class="grid-wrap">
-        <div class="grid-weeks" aria-hidden="true">
-          <span style="grid-column: 1">1</span>
-          <span style="grid-column: 13">13</span>
-          <span style="grid-column: 26">26</span>
-          <span style="grid-column: 39">39</span>
-          <span style="grid-column: 52">52</span>
-        </div>
+        <div class="grid-weeks" id="grid-weeks" aria-hidden="true"></div>
         <div class="grid" id="grid" tabindex="0" aria-describedby="cell-info"
              aria-label="Grille de votre vie. Flèches pour parcourir les semaines, Entrée pour ajouter un événement."></div>
       </div>

@@ -218,8 +218,9 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * Grille : une ligne par année de vie, 52 carrés par ligne.
-   * La semaine n de l'année d'âge y commence n×7 jours après le
+   * Grille : une ligne par année, 52 carrés par ligne.
+   * Par défaut, les lignes suivent les années de vie :
+   * la semaine n de l'année d'âge y commence n×7 jours après le
    * y-ième anniversaire ; la 52e semaine va jusqu'à l'anniversaire suivant.
    * ------------------------------------------------------------------ */
 
@@ -236,6 +237,39 @@
     const start = addDays(addYears(birth, year), week * 7);
     const end = week === WEEKS - 1 ? addYears(birth, year + 1) : addDays(start, 7);
     return { start, end };
+  }
+
+  // Variante alignée sur les années civiles : la ligne r est l'année de
+  // naissance + r, la semaine n commence n×7 jours après le 1er janvier et
+  // la 52e va jusqu'au 31 décembre. La première ligne commence avant la
+  // naissance.
+  function yearStart(year) {
+    return Date.UTC(year, 0, 1);
+  }
+
+  function calendarWeekOf(birth, date) {
+    const birthYear = new Date(birth).getUTCFullYear();
+    const y = new Date(date).getUTCFullYear();
+    if (y < birthYear) return null;
+    const year = y - birthYear;
+    const week = Math.min(WEEKS - 1, Math.floor(daysBetween(yearStart(y), date) / 7));
+    return { year, week, index: year * WEEKS + week };
+  }
+
+  function calendarWeekRange(birth, year, week) {
+    const y = new Date(birth).getUTCFullYear() + year;
+    const start = addDays(yearStart(y), week * 7);
+    const end = week === WEEKS - 1 ? yearStart(y + 1) : addDays(start, 7);
+    return { start, end };
+  }
+
+  const GRID_MODES = {
+    life: { weekOf, weekRange },
+    calendar: { weekOf: calendarWeekOf, weekRange: calendarWeekRange },
+  };
+
+  function gridScheme(mode) {
+    return GRID_MODES[mode] || GRID_MODES.life;
   }
 
   // Nombre de fois où la date jour/mois (mois 0-11) tombe dans [from, to].
@@ -620,6 +654,10 @@
     deathDate,
     weekOf,
     weekRange,
+    calendarWeekOf,
+    calendarWeekRange,
+    GRID_MODES,
+    gridScheme,
     countYearly,
     lifeSummary,
     relationTimeline,

@@ -237,8 +237,24 @@ b, strong { font-weight: 700; }
   padding: 18px 18px 16px;
   min-width: 0;
 }
-.life-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 16px; margin-bottom: 14px; }
-.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.78rem; color: var(--ink-soft); }
+.life-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 16px; margin-bottom: 12px; }
+.legend { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.78rem; color: var(--ink-soft); }
+
+.grid-settings { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 0.82rem; color: var(--ink-soft); }
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 8px;
+  background: var(--paper);
+}
+.segmented label { position: relative; cursor: pointer; }
+.segmented input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.segmented span { display: block; padding: 5px 10px; border-radius: 6px; font-weight: 600; color: var(--ink-soft); white-space: nowrap; }
+.segmented label:hover span { color: var(--ink); }
+.segmented input:checked + span { background: var(--ink); color: var(--paper); }
+.segmented input:focus-visible + span { outline: 2px solid var(--pen); outline-offset: 1px; }
 .legend li { display: inline-flex; align-items: center; gap: 6px; }
 .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 .sw-past { background: var(--past); }
@@ -247,6 +263,7 @@ b, strong { font-weight: 700; }
 .sw-beyond { box-shadow: inset 0 0 0 1px var(--rule); opacity: 0.5; }
 
 .grid-wrap { --gap: var(--cell-gap); }
+.grid-wrap.cal { --margin-w: 2.6rem; }
 .grid-weeks {
   display: grid;
   grid-template-columns: repeat(52, minmax(0, 1fr));
@@ -278,20 +295,29 @@ b, strong { font-weight: 700; }
   background: var(--pen-soft);
   pointer-events: none;
 }
+/* Toutes les lignes ont la même hauteur : celle d'un carré. */
 .yr {
+  position: relative;
   display: grid;
-  grid-template-columns: var(--margin-w) repeat(52, minmax(0, 1fr));
+  grid-template-columns: repeat(52, minmax(0, 1fr));
   column-gap: var(--gap);
-  align-items: center;
+  padding-left: var(--margin-w);
 }
-.yr.dec { margin-top: 5px; }
+/* L'âge ou l'année s'écrit dans la marge sans agrandir sa ligne. */
 .yr > b {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: var(--margin-w);
+  transform: translateY(-50%);
   font: 600 0.62rem/1 var(--font-data);
   color: var(--ink-soft);
   text-align: right;
   padding-right: 11px;
   font-variant-numeric: tabular-nums;
+  pointer-events: none;
 }
+.yr > b:empty { display: none; }
 .c {
   display: block;
   aspect-ratio: 1;
@@ -301,6 +327,7 @@ b, strong { font-weight: 700; }
 }
 .c.p { background: var(--past); box-shadow: none; }
 .c.x { box-shadow: inset 0 0 0 1px var(--rule); opacity: 0.45; }
+.c.b { visibility: hidden; }
 .c.r { background: color-mix(in srgb, var(--c) 42%, transparent); box-shadow: none; }
 .c.r.p { background: var(--c); }
 .c.e { background: var(--c); box-shadow: 0 0 0 1px var(--surface), 0 0 0 2px var(--c); position: relative; z-index: 1; }
@@ -560,7 +587,7 @@ input[type="range"] { width: 100%; accent-color: var(--ink); }
   :root { --margin-w: 1.55rem; --cell-gap: 1px; }
   .life { padding: 14px 10px 12px; }
   .yr > b { padding-right: 8px; font-size: 0.55rem; }
-  .yr.dec { margin-top: 3px; }
+  .grid-wrap.cal { --margin-w: 2.05rem; }
   .grid-weeks { font-size: 0.55rem; }
   .c { border-radius: 1px; }
   .c.e { box-shadow: 0 0 0 1px var(--c); }

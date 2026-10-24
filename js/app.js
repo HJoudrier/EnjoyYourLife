@@ -95,6 +95,7 @@
     const ev = (data) => ({ id: uid(), demo: true, type: 'point', ...data });
     return {
       demo: true,
+      settings: { gridMode: 'life' },
       profile: { birth: '1991-04-17', sex: 'F', job: 'Infirmière', category: 'inter', sector: 'sante', adjust: 0 },
       relations: [
         rel('child', { name: 'Léa', start: '2019-09-03', otherSex: 'F', color: COLORS[4] }),
@@ -172,7 +173,8 @@
           color: isColor(e.color) ? e.color : COLORS[i % COLORS.length],
         };
       });
-    return { demo: !!raw.demo, profile, relations, events };
+    const settings = { gridMode: raw.settings && L.GRID_MODES[raw.settings.gridMode] ? raw.settings.gridMode : 'life' };
+    return { demo: !!raw.demo, settings, profile, relations, events };
   }
 
   function load() {
@@ -200,13 +202,25 @@
     const now = L.today();
     const life = L.lifeSummary(state.profile, now);
     const timelines = new Map(state.relations.map((r) => [r.id, L.relationTimeline(r, state.profile, now)]));
-    return { now, life, timelines };
+    // Les carrés de la grille : alignés sur les anniversaires ou sur les 1er janvier.
+    const mode = state.settings.gridMode;
+    const scheme = L.gridScheme(mode);
+    const cells = {
+      mode,
+      scheme,
+      birthYear: new Date(life.birth).getUTCFullYear(),
+      birth: scheme.weekOf(life.birth, life.birth),
+      now: scheme.weekOf(life.birth, now),
+      death: scheme.weekOf(life.birth, life.death),
+    };
+    return { now, life, timelines, cells };
   }
 
   function render() {
     view = compute();
     if (ui.focus && !state.relations.some((r) => r.id === ui.focus)) ui.focus = null;
     $('#demo-banner').hidden = !state.demo;
+    document.querySelectorAll('input[name="grid-mode"]').forEach((r) => { r.checked = r.value === view.cells.mode; });
     renderSummary();
     renderGrid();
     renderRelations();
@@ -249,7 +263,8 @@
   function collectMarks() {
     const birth = view.life.birth;
     const marks = new Map();
-    let lastYear = view.life.deathCell.year;
+    const weekOf = view.cells.scheme.weekOf;
+    let lastYear = view.cells.death.year;
     const mark = (index, item, kind) => {
       let m = marks.get(index);
       if (!m) marks.set(index, (m = { items: [], kind: null, color: null }));
@@ -263,8 +278,8 @@
       .filter((e) => e.t1 >= birth)
       .sort((a, b) => (b.t1 - b.t0) - (a.t1 - a.t0));
     for (const e of periods) {
-      const a = L.weekOf(birth, Math.max(e.t0, birth));
-      const b = L.weekOf(birth, e.t1);
+      const a = weekOf(birth, Math.max(e.t0, birth));
+      const b = weekOf(birth, e.t1);
       for (let i = a.index; i <= b.index; i++) mark(i, e, 'r');
       lastYear = Math.max(lastYear, b.year);
     }
@@ -277,7 +292,7 @@
       points.push({ title: label, emoji: START_EMOJI[r.kind] || '✨', color: r.color, t0, relation: r.id });
     }
     for (const e of points) {
-      const c = L.weekOf(birth, e.t0);
+      const c = e.t0 >= birth && weekOf(birth, e.t0);
       if (!c) continue;
       mark(c.index, e, 'e');
       lastYear = Math.max(lastYear, c.year);
@@ -285,25 +300,35 @@
     return { marks, lastYear: Math.min(lastYear, 120) };
   }
 
+  const MONTH_TICKS = [[1, 'janv.'], [13, 'avr.'], [26, 'juil.'], [40, 'oct.']];
+  const WEEK_TICKS = [[1, '1'], [13, '13'], [26, '26'], [39, '39'], [52, '52']];
+
   function renderGrid() {
-    const { life } = view;
+    const { life, cells } = view;
+    const calendar = cells.mode === 'calendar';
     const { marks, lastYear } = collectMarks();
     const focusRel = ui.focus && state.relations.find((r) => r.id === ui.focus);
     const focusTl = focusRel && view.timelines.get(focusRel.id);
     view.marks = marks;
     view.lastIndex = (lastYear + 1) * L.WEEKS - 1;
 
-    const nowIdx = life.nowCell.index;
-    const deathIdx = life.deathCell.index;
+    const birthIdx = cells.birth.index;
+    const nowIdx = cells.now.index;
+    const deathIdx = cells.death.index;
     let html = '';
     for (let y = 0; y <= lastYear; y++) {
-      html += `<div class="yr${y && y % 10 === 0 ? ' dec' : ''}"><b>${y % 5 === 0 ? y : ''}</b>`;
+      const label = calendar ? cells.birthYear + y : y;
+      html += `<div class="yr"><b>${label % 5 === 0 ? label : ''}</b>`;
       for (let w = 0; w < L.WEEKS; w++) {
         const i = y * L.WEEKS + w;
+        if (i < birthIdx) {
+          html += `<i class="c b" data-i="${i}"></i>`;
+          continue;
+        }
         let cls = i < nowIdx ? 'c p' : i === nowIdx ? 'c n' : i > deathIdx ? 'c x' : 'c';
         let style = '';
         if (focusTl) {
-          const range = L.weekRange(life.birth, y, w);
+          const range = cells.scheme.weekRange(life.birth, y, w);
           const ratio = L.ratioAt(focusTl, Math.max(range.start, Math.min(range.end - L.DAY, focusTl.start)));
           if (ratio != null && range.end > focusTl.start && range.start < focusTl.end) {
             cls += ' in';
@@ -321,6 +346,9 @@
     const grid = $('#grid');
     grid.innerHTML = html;
     grid.classList.toggle('focus', !!focusTl);
+    $('.grid-wrap').classList.toggle('cal', calendar);
+    $('#grid-weeks').innerHTML = (calendar ? MONTH_TICKS : WEEK_TICKS)
+      .map(([col, text]) => `<span style="grid-column: ${col}">${text}</span>`).join('');
 
     const bar = $('#focus-bar');
     bar.hidden = !focusTl;
@@ -335,7 +363,7 @@
   }
 
   function cellIndex(i) {
-    return Math.max(0, Math.min(view.lastIndex, i));
+    return Math.max(view.cells.birth.index, Math.min(view.lastIndex, i));
   }
 
   function showCell(i) {
@@ -344,12 +372,20 @@
       box.innerHTML = `<div class="muted">Survolez ou touchez une semaine pour la voir en détail. Touchez-la à nouveau pour y ajouter un événement.</div>`;
       return;
     }
-    const { life, now } = view;
+    const { life, now, cells } = view;
+    if (i < cells.birth.index) {
+      box.innerHTML = `<div class="muted">Avant votre naissance.</div>`;
+      return;
+    }
     const y = Math.floor(i / L.WEEKS), w = i % L.WEEKS;
-    const range = L.weekRange(life.birth, y, w);
+    const range = cells.scheme.weekRange(life.birth, y, w);
     const last = range.end - L.DAY;
-    const when = i === life.nowCell.index ? 'cette semaine' : relative(range.start, now);
-    const status = i > life.deathCell.index ? ' · au-delà de votre espérance de vie' : '';
+    const when = i === cells.now.index ? 'cette semaine' : relative(range.start, now);
+    const status = i > cells.death.index ? ' · au-delà de votre espérance de vie' : '';
+    const title = cells.mode === 'calendar'
+      ? `${cells.birthYear + y}, semaine ${w + 1}`
+      : `${y === 0 ? 'Première année' : plural(y, 'an', 'ans')}, semaine ${w + 1}`;
+    const age = cells.mode === 'calendar' ? ` · ${ageText(L.fullYears(life.birth, Math.max(range.start, life.birth)))}` : '';
     const m = view.marks.get(i);
     let items = m ? m.items.map((e) => `<li>${esc(e.emoji)} ${esc(e.title)}</li>`).join('') : '';
     if (ui.focus) {
@@ -361,8 +397,8 @@
     }
     box.innerHTML = `
       <div>
-        <strong>${y === 0 ? 'Première année' : `${plural(y, 'an', 'ans')}`}, semaine ${w + 1}</strong>
-        <span class="muted"> · du ${dfDay.format(range.start)} au ${dfLong.format(last)} · ${when}${status}</span>
+        <strong>${title}</strong>
+        <span class="muted"> · du ${dfDay.format(range.start)} au ${dfLong.format(last)}${age} · ${when}${status}</span>
         ${items ? `<ul>${items}</ul>` : ''}
       </div>
       <button type="button" class="btn btn-small" data-action="add-at" data-i="${i}">Ajouter un événement cette semaine</button>`;
@@ -512,8 +548,8 @@
   }
 
   function dateOfCell(i) {
-    const range = L.weekRange(view.life.birth, Math.floor(i / L.WEEKS), i % L.WEEKS);
-    return i === view.life.nowCell.index ? view.now : range.start;
+    const range = view.cells.scheme.weekRange(view.life.birth, Math.floor(i / L.WEEKS), i % L.WEEKS);
+    return i === view.cells.now.index ? view.now : Math.max(range.start, view.life.birth);
   }
 
   const grid = $('#grid');
@@ -526,19 +562,19 @@
   grid.addEventListener('mouseleave', () => showCell(ui.selected));
   grid.addEventListener('click', (e) => {
     const c = e.target.closest('.c');
-    if (!c) return;
+    if (!c || c.classList.contains('b')) return;
     const i = Number(c.dataset.i);
     if (ui.selected === i) openEvent(null, L.toISO(dateOfCell(i)));
     else select(i);
   });
   grid.addEventListener('focus', () => {
     // Au clavier, on part de la semaine en cours ; à la souris, de la semaine touchée.
-    if (!pointerDown && ui.selected == null) select(view.life.nowCell.index);
+    if (!pointerDown && ui.selected == null) select(view.cells.now.index);
     pointerDown = false;
   });
   grid.addEventListener('keydown', (e) => {
     const moves = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -L.WEEKS, ArrowDown: L.WEEKS };
-    const current = ui.selected == null ? view.life.nowCell.index : ui.selected;
+    const current = ui.selected == null ? view.cells.now.index : ui.selected;
     if (moves[e.key]) {
       e.preventDefault();
       select(cellIndex(current + moves[e.key]));
@@ -546,7 +582,7 @@
       if (el) el.scrollIntoView({ block: 'nearest' });
     } else if (e.key === 'Home') {
       e.preventDefault();
-      select(view.life.nowCell.index);
+      select(view.cells.now.index);
     } else if (e.key === 'Enter') {
       e.preventDefault();
       openEvent(null, L.toISO(dateOfCell(current)));
@@ -554,6 +590,17 @@
       setFocus(null);
     }
   });
+
+  // Changer l'alignement garde la même semaine sélectionnée.
+  document.querySelectorAll('input[name="grid-mode"]').forEach((input) => input.addEventListener('change', () => {
+    if (!input.checked) return;
+    const date = ui.selected == null ? null : dateOfCell(ui.selected);
+    state.settings.gridMode = input.value;
+    ui.selected = null;
+    save();
+    render();
+    if (date != null) select(view.cells.scheme.weekOf(view.life.birth, date).index);
+  }));
 
   function setFocus(id) {
     ui.focus = id;

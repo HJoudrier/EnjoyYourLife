@@ -175,3 +175,21 @@ test('l’écart entre cadres et ouvriers se réduit avec l’âge comme le mesu
     assert.ok(gap(80) < gap(60), `${sex} : l’écart continue de se réduire`);
   }
 });
+
+test('grille alignée sur les années civiles', () => {
+  const birth = d('1991-04-17');
+  const cal = Life.gridScheme('calendar');
+  assert.equal(Life.gridScheme('life'), Life.GRID_MODES.life);
+  assert.equal(Life.gridScheme('inconnu'), Life.GRID_MODES.life);
+  for (let t = d('1991-01-01'); t < d('2030-01-01'); t += 3 * Life.DAY) {
+    const cell = cal.weekOf(birth, t);
+    const range = cal.weekRange(birth, cell.year, cell.week);
+    assert.ok(range.start <= t && t < range.end, Life.toISO(t));
+    assert.equal(cell.year, new Date(t).getUTCFullYear() - 1991);
+  }
+  assert.equal(cal.weekOf(birth, d('1990-12-31')), null);
+  assert.deepEqual(cal.weekOf(birth, birth), { year: 0, week: 15, index: 15 });
+  assert.equal(Life.toISO(cal.weekRange(birth, 33, 0).start), '2024-01-01');
+  assert.equal(Life.toISO(cal.weekRange(birth, 33, 51).end), '2025-01-01');
+  assert.deepEqual(cal.weekOf(birth, d('2024-12-31')), { year: 33, week: 51, index: 33 * 52 + 51 });
+});

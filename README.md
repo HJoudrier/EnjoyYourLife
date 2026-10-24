@@ -28,7 +28,7 @@ npm start          # puis http://localhost:8000
 
 Au premier lancement, l’application montre un exemple (Camille, infirmière née en 1991). Cliquez sur **Commencer avec ma vie** pour saisir votre profil ; les exemples disparaissent.
 
-Sur la grille, survolez ou touchez une semaine pour voir ses dates et ses événements ; touchez-la une seconde fois pour y ajouter un événement. Au clavier : flèches pour se déplacer, Entrée pour ajouter, Échap pour quitter la vue d’un proche.
+Sur la grille, choisissez d’aligner les lignes sur vos anniversaires ou sur les 1er janvier. Survolez ou touchez une semaine pour voir ses dates et ses événements ; touchez-la une seconde fois pour y ajouter un événement. Au clavier : flèches pour se déplacer, Entrée pour ajouter, Échap pour quitter la vue d’un proche.
 
 ### Vos données
 
@@ -78,7 +78,12 @@ Sources :
 
 ### La grille
 
-La semaine *n* de l’année d’âge *a* commence *n* × 7 jours après votre *a*-ième anniversaire. La 52ᵉ semaine dure jusqu’à l’anniversaire suivant, si bien que chaque ligne correspond exactement à une année de votre vie.
+Toutes les lignes sont identiques : 52 carrés de même taille, sans espace supplémentaire. Un réglage au-dessus de la grille choisit sur quoi les aligner :
+
+- **vos années de vie** (par défaut) : la semaine *n* de l’année d’âge *a* commence *n* × 7 jours après votre *a*-ième anniversaire. La 52ᵉ semaine dure jusqu’à l’anniversaire suivant, si bien que chaque ligne correspond exactement à une année de votre vie. La marge indique l’âge tous les 5 ans.
+- **les années civiles** : chaque ligne va du 1er janvier au 31 décembre, la semaine *n* commence *n* × 7 jours après le 1er janvier et la 52ᵉ va jusqu’au 31 décembre. La première ligne commence à votre semaine de naissance. La marge indique l’année tous les 5 ans et l’en-tête les mois.
+
+Le réglage est enregistré avec vos données. Changer d’alignement garde la semaine sélectionnée.
 
 ### Le temps ensemble
 

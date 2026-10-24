@@ -13,6 +13,7 @@
   const nf1 = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const pct = new Intl.NumberFormat('fr-FR', { style: 'percent', maximumFractionDigits: 0 });
   const pct1 = new Intl.NumberFormat('fr-FR', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const pct2 = new Intl.NumberFormat('fr-FR', { style: 'percent', maximumFractionDigits: 2 });
   const dfLong = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
   const dfMonth = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
   const dfDay = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', timeZone: 'UTC' });
@@ -66,6 +67,27 @@
 
   function ageText(years) {
     return years <= 0 ? 'la première année' : `à ${plural(years, 'an', 'ans')}`;
+  }
+
+  // Chances d'être en vie : « 87 % », sans afficher 100 % ni 0 % pour l'avenir.
+  function chanceText(p) {
+    if (p >= 0.995) return 'plus de 99 %';
+    if (p < 0.005) return 'moins de 1 %';
+    return pct.format(p);
+  }
+
+  function chanceLabel(p) {
+    if (p >= 0.995) return '&gt;99<small>%</small>';
+    if (p < 0.005) return '&lt;1<small>%</small>';
+    return `${Math.round(p * 100)}<small>%</small>`;
+  }
+
+  function riskText(q) {
+    return q < 0.01 ? pct2.format(q) : pct1.format(q);
+  }
+
+  function yearsText(years) {
+    return years < 1 ? 'moins d’un an' : plural(Math.round(years), 'an', 'ans');
   }
 
   function freqLabel(days) {
@@ -205,6 +227,13 @@
     // Les carrés de la grille : alignés sur les anniversaires ou sur les 1er janvier.
     const mode = state.settings.gridMode;
     const scheme = L.gridScheme(mode);
+    const curve = L.survivalCurve(state.profile, now);
+    // La grille continue après l'espérance de vie, jusqu'à l'âge qu'on a
+    // moins d'une chance sur dix d'atteindre.
+    let tail = life.death;
+    const limit = L.addYears(life.birth, 120);
+    while (curve.at(tail) >= 0.1 && tail < limit) tail = L.addDays(tail, 91);
+    const cellOf = (t) => scheme.weekOf(life.birth, Math.max(t, now));
     const cells = {
       mode,
       scheme,
@@ -212,8 +241,12 @@
       birth: scheme.weekOf(life.birth, life.birth),
       now: scheme.weekOf(life.birth, now),
       death: scheme.weekOf(life.birth, life.death),
+      tail: scheme.weekOf(life.birth, Math.min(tail, limit)),
+      // Premières semaines passées, en moyenne, avec une incapacité puis une incapacité forte.
+      disabled: cellOf(life.health.freeEnd).index,
+      severe: cellOf(life.health.severeFreeEnd).index,
     };
-    return { now, life, timelines, cells };
+    return { now, life, timelines, cells, curve };
   }
 
   function render() {
@@ -221,6 +254,7 @@
     if (ui.focus && !state.relations.some((r) => r.id === ui.focus)) ui.focus = null;
     $('#demo-banner').hidden = !state.demo;
     document.querySelectorAll('input[name="grid-mode"]').forEach((r) => { r.checked = r.value === view.cells.mode; });
+    $('#legend-pct').textContent = view.cells.mode === 'calendar' ? 'Chances d’être en vie au 1er janvier' : 'Chances d’atteindre cet âge';
     renderSummary();
     renderGrid();
     renderRelations();
@@ -230,6 +264,11 @@
 
   function renderSummary() {
     const { life } = view;
+    const health = life.health;
+    const position = (t) => Math.min(1, Math.max(life.fraction, (t - life.birth) / (life.death - life.birth))) * 100;
+    const disabledAt = position(health.freeEnd);
+    const severeAt = position(health.severeFreeEnd);
+    const yearsLeft = (life.death - view.now) / L.YEAR;
     const job = state.profile.job ? ` · ${esc(state.profile.job)}` : '';
     const minutes = Math.min(1439, Math.floor(life.fraction * 1440));
     const clock = `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}`;
@@ -243,6 +282,8 @@
       <div class="lifebar">
         <div class="lifebar-track" role="img" aria-label="${pct1.format(life.fraction)} de votre vie">
           <span class="lifebar-fill" style="width:${(life.fraction * 100).toFixed(2)}%"></span>
+          <span class="lifebar-h1" style="left:${disabledAt.toFixed(2)}%;width:${(severeAt - disabledAt).toFixed(2)}%"></span>
+          <span class="lifebar-h2" style="left:${severeAt.toFixed(2)}%;width:${(100 - severeAt).toFixed(2)}%"></span>
           <span class="lifebar-now" style="left:${(life.fraction * 100).toFixed(2)}%"></span>
         </div>
         <div class="lifebar-labels">
@@ -250,10 +291,15 @@
           <span><strong>${pct1.format(life.fraction)}</strong> de votre vie</span>
           <span>${dfMonth.format(life.death)}</span>
         </div>
+        <p class="lifebar-note">En moyenne, encore <b>${yearsText(health.freeYears)}</b> sans incapacité, puis
+          <i class="sw sw-h1"></i>${yearsText(yearsLeft - health.freeYears)} avec une incapacité, dont
+          <i class="sw sw-h2"></i>${yearsText(yearsLeft - health.severeFreeYears)} avec une incapacité forte.</p>
       </div>
       <dl class="facts">
         <div><dt>Espérance de vie</dt><dd>${nf1.format(life.lifespan)} ans</dd><small>soit jusqu’en ${dfMonth.format(life.death)} environ</small></div>
         <div><dt>Il vous reste</dt><dd>${esc(left)}</dd><small>soit ${nf.format(life.daysLeft)} jours</small></div>
+        <div><dt>Sans incapacité</dt><dd>${yearsText(health.freeYears)}</dd><small>en moyenne, jusqu’en ${dfMonth.format(health.freeEnd)}</small></div>
+        <div><dt>Sans incapacité forte</dt><dd>${yearsText(health.severeFreeYears)}</dd><small>en moyenne, jusqu’en ${dfMonth.format(health.severeFreeEnd)}</small></div>
         <div><dt>Encore</dt><dd>${plural(life.summers, 'été', 'étés')}</dd><small>et ${plural(life.christmases, 'Noël', 'Noëls')}</small></div>
         <div><dt>Si votre vie était une journée</dt><dd>${clock}</dd><small>${moment}</small></div>
       </dl>`;
@@ -264,7 +310,7 @@
     const birth = view.life.birth;
     const marks = new Map();
     const weekOf = view.cells.scheme.weekOf;
-    let lastYear = view.cells.death.year;
+    let lastYear = Math.max(view.cells.death.year, view.cells.tail.year);
     const mark = (index, item, kind) => {
       let m = marks.get(index);
       if (!m) marks.set(index, (m = { items: [], kind: null, color: null }));
@@ -318,14 +364,24 @@
     let html = '';
     for (let y = 0; y <= lastYear; y++) {
       const label = calendar ? cells.birthYear + y : y;
-      html += `<div class="yr"><b>${label % 5 === 0 ? label : ''}</b>`;
+      // À droite, les chances d'arriver au début de la ligne.
+      const rowStart = cells.scheme.weekRange(life.birth, y, 0).start;
+      const chance = rowStart > view.now
+        ? `<span class="pct${label % 5 ? ' minor' : ''}">${chanceLabel(view.curve.at(rowStart))}</span>`
+        : '';
+      html += `<div class="yr"><b>${label % 5 === 0 ? label : ''}</b>${chance}`;
       for (let w = 0; w < L.WEEKS; w++) {
         const i = y * L.WEEKS + w;
         if (i < birthIdx) {
           html += `<i class="c b" data-i="${i}"></i>`;
           continue;
         }
-        let cls = i < nowIdx ? 'c p' : i === nowIdx ? 'c n' : i > deathIdx ? 'c x' : 'c';
+        let cls = i < nowIdx ? 'c p'
+          : i === nowIdx ? 'c n'
+          : i > deathIdx ? 'c x'
+          : i >= cells.severe ? 'c h2'
+          : i >= cells.disabled ? 'c h1'
+          : 'c';
         let style = '';
         if (focusTl) {
           const range = cells.scheme.weekRange(life.birth, y, w);
@@ -386,6 +442,14 @@
       ? `${cells.birthYear + y}, semaine ${w + 1}`
       : `${y === 0 ? 'Première année' : plural(y, 'an', 'ans')}, semaine ${w + 1}`;
     const age = cells.mode === 'calendar' ? ` · ${ageText(L.fullYears(life.birth, Math.max(range.start, life.birth)))}` : '';
+    let stats = '';
+    if (range.start > now) {
+      const health = i > cells.death.index ? ''
+        : i >= cells.severe ? ' · en moyenne, avec une incapacité forte'
+        : i >= cells.disabled ? ' · en moyenne, avec une incapacité'
+        : ' · en moyenne, sans incapacité';
+      stats = `<p class="cell-stats">Chances d’être encore en vie : <b>${chanceText(view.curve.at(range.start))}</b> · risque de décès dans l’année à cet âge : ${riskText(view.curve.yearlyRisk(range.start))}${health}</p>`;
+    }
     const m = view.marks.get(i);
     let items = m ? m.items.map((e) => `<li>${esc(e.emoji)} ${esc(e.title)}</li>`).join('') : '';
     if (ui.focus) {
@@ -399,6 +463,7 @@
       <div>
         <strong>${title}</strong>
         <span class="muted"> · du ${dfDay.format(range.start)} au ${dfLong.format(last)}${age} · ${when}${status}</span>
+        ${stats}
         ${items ? `<ul>${items}</ul>` : ''}
       </div>
       <button type="button" class="btn btn-small" data-action="add-at" data-i="${i}">Ajouter un événement cette semaine</button>`;

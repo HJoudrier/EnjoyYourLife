@@ -99,20 +99,59 @@
   const MAX_AGE = 125;
   const FADE_AGE = 60;
 
-  // Espérance de vie résiduelle (en années) d'une personne qui a déjà `age` ans.
-  function remainingYears(sex, age, k) {
+  function hazard(p, x, logK) {
+    const factor = Math.exp(x <= FADE_AGE ? logK : logK * Math.exp(-p.fade * (x - FADE_AGE)));
+    return p.A + factor * p.B * Math.exp(p.c * x);
+  }
+
+  // Années restant à vivre à partir de `age`, chaque année étant pondérée
+  // par weight(âge) : 1 pour l'espérance de vie, la part de personnes sans
+  // incapacité pour l'espérance de vie sans incapacité (méthode de Sullivan).
+  function lifeYears(sex, age, k, weight) {
     const p = MORTALITY[sex];
     const logK = Math.log(k == null ? 1 : k);
     let alive = 1, sum = 0;
     for (let x = age; x < MAX_AGE && alive > 1e-7; x += STEP) {
       const mid = x + STEP / 2;
-      const factor = Math.exp(mid <= FADE_AGE ? logK : logK * Math.exp(-p.fade * (mid - FADE_AGE)));
-      const mu = p.A + factor * p.B * Math.exp(p.c * mid);
-      const next = alive * Math.exp(-mu * STEP);
-      sum += ((alive + next) / 2) * STEP;
+      const next = alive * Math.exp(-hazard(p, mid, logK) * STEP);
+      sum += ((alive + next) / 2) * STEP * (weight ? weight(mid) : 1);
       alive = next;
     }
     return sum;
+  }
+
+  // Espérance de vie résiduelle (en années) d'une personne qui a déjà `age` ans.
+  function remainingYears(sex, age, k) {
+    return lifeYears(sex, age, k);
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Espérance de vie en bonne santé
+   *
+   * Part de la population avec une incapacité (limitée dans ses activités
+   * depuis au moins six mois) ou une incapacité forte, selon l'âge :
+   * courbe logistique 1 / (1 + e^(−(x − mid) / scale)). Les paramètres
+   * sont calibrés pour retrouver, avec la mortalité ci-dessus, les
+   * espérances de vie de la DREES : sans incapacité 64,1 ans (femmes) et
+   * 63,7 ans (hommes) à la naissance, 11,8 et 10,5 ans à 65 ans (2024) ;
+   * sans incapacité forte 77,5 et 73,8 ans à la naissance (2023), 18,5 et
+   * 15,8 ans à 65 ans (2024).
+   * ------------------------------------------------------------------ */
+
+  const DISABILITY = {
+    any: { F: { mid: 78.8356, scale: 26.8015 }, M: { mid: 79.6712, scale: 22.6908 } },
+    severe: { F: { mid: 117.276, scale: 28.8033 }, M: { mid: 109.69, scale: 23.5901 } },
+  };
+
+  function disabilityShare(kind, sex, age) {
+    const d = DISABILITY[kind][sex];
+    return 1 / (1 + Math.exp(-(age - d.mid) / d.scale));
+  }
+
+  // Années restant à vivre sans incapacité (kind = 'any') ou sans
+  // incapacité forte (kind = 'severe').
+  function disabilityFreeYears(kind, sex, age, k) {
+    return lifeYears(sex, age, k, (x) => 1 - disabilityShare(kind, sex, x));
   }
 
   // Espérance de vie à 35 ans selon la catégorie socioprofessionnelle,
@@ -199,17 +238,87 @@
     return gapFactor(sex, Math.round((categoryGap(sex, category) + sectorGap(sector)) * 100) / 100);
   }
 
+  // Âge atteint et facteurs de mortalité d'une personne. Sexe non précisé :
+  // on calcule pour les deux sexes et on fait la moyenne.
+  function personModel(person, now) {
+    const birth = parseDate(person.birth);
+    const sexes = person.sex === 'F' || person.sex === 'M' ? [person.sex] : ['F', 'M'];
+    const category = person.category || 'ensemble';
+    return {
+      birth,
+      age: Math.max(0, (now - birth) / YEAR),
+      sexes,
+      factors: sexes.map((s) => workFactor(s, category, person.sector)),
+    };
+  }
+
+  function averageOver(model, fn) {
+    return model.sexes.reduce((sum, s, i) => sum + fn(s, model.factors[i]), 0) / model.sexes.length;
+  }
+
   // Âge moyen au décès attendu (en années), sachant que la personne est en vie
   // aujourd'hui. person = { birth, sex: 'F'|'M'|'X', category, sector, adjust }.
   function expectedLifespan(person, now) {
-    const birth = parseDate(person.birth);
-    const age = Math.max(0, (now - birth) / YEAR);
-    const sexes = person.sex === 'F' || person.sex === 'M' ? [person.sex] : ['F', 'M'];
-    const category = person.category || 'ensemble';
-    let total = 0;
-    for (const s of sexes) total += remainingYears(s, age, workFactor(s, category, person.sector));
-    const years = age + total / sexes.length + (Number(person.adjust) || 0);
-    return Math.max(years, age + 7 / 365.2425);
+    const model = personModel(person, now);
+    const years = model.age + averageOver(model, (s, k) => remainingYears(s, model.age, k)) + (Number(person.adjust) || 0);
+    return Math.max(years, model.age + 7 / 365.2425);
+  }
+
+  // L'ajustement personnel allonge ou raccourcit tout le reste de la vie
+  // dans la même proportion : rapport entre l'avenir ajusté et celui du modèle.
+  function adjustStretch(person, now, model) {
+    const modelLeft = averageOver(model, (s, k) => remainingYears(s, model.age, k));
+    return (expectedLifespan(person, now) - model.age) / modelLeft;
+  }
+
+  // Années restant à vivre sans incapacité, puis sans incapacité forte.
+  function healthOutlook(person, now) {
+    const model = personModel(person, now);
+    const stretch = adjustStretch(person, now, model);
+    const freeYears = stretch * averageOver(model, (s, k) => disabilityFreeYears('any', s, model.age, k));
+    const severeFreeYears = stretch * averageOver(model, (s, k) => disabilityFreeYears('severe', s, model.age, k));
+    return {
+      freeYears,
+      severeFreeYears,
+      freeEnd: addDays(now, Math.round((freeYears * YEAR) / DAY)),
+      severeFreeEnd: addDays(now, Math.round((severeFreeYears * YEAR) / DAY)),
+    };
+  }
+
+  // Probabilité d'être encore en vie à une date future, en enchaînant les
+  // risques de décès de chaque tranche d'âge (pas de 0,02 an) :
+  // P(t) = Π (1 − risque de décès de la tranche).
+  function survivalCurve(person, now) {
+    const model = personModel(person, now);
+    const stretch = adjustStretch(person, now, model);
+    const curves = model.sexes.map((s, i) => {
+      const p = MORTALITY[s];
+      const logK = Math.log(model.factors[i]);
+      const values = [1];
+      let alive = 1;
+      for (let x = model.age; x < MAX_AGE; x += STEP) {
+        alive *= Math.exp(-hazard(p, x + STEP / 2, logK) * STEP);
+        values.push(alive);
+      }
+      return values;
+    });
+    const at = (t) => {
+      const years = (t - model.birth) / YEAR - model.age;
+      if (years <= 0) return 1;
+      const pos = years / stretch / STEP;
+      const i = Math.floor(pos);
+      let total = 0;
+      for (const v of curves) {
+        if (i < v.length - 1) total += v[i] + (v[i + 1] - v[i]) * (pos - i);
+      }
+      return total / curves.length;
+    };
+    // Risque de mourir dans l'année qui suit cette date.
+    const yearlyRisk = (t) => {
+      const alive = at(t);
+      return alive > 0 ? 1 - at(t + YEAR) / alive : 1;
+    };
+    return { at, yearlyRisk };
   }
 
   function deathDate(person, now) {
@@ -286,6 +395,7 @@
     const birth = parseDate(profile.birth);
     const lifespan = expectedLifespan(profile, now);
     const death = deathDate(profile, now);
+    const health = healthOutlook(profile, now);
     const nowCell = weekOf(birth, now);
     const deathCell = weekOf(birth, death);
     const weeksTotal = deathCell.index + 1;
@@ -305,6 +415,7 @@
       fraction: (now - birth) / (death - birth),
       summers: countYearly(now, death, 6, 15),
       christmases: countYearly(now, death, 11, 25),
+      health,
     };
   }
 
@@ -646,6 +757,11 @@
     diffParts,
     fullYears,
     remainingYears,
+    DISABILITY,
+    disabilityShare,
+    disabilityFreeYears,
+    healthOutlook,
+    survivalCurve,
     categoryFactor,
     sectorFactor,
     sectorGap,

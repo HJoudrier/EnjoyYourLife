@@ -193,3 +193,60 @@ test('grille alignée sur les années civiles', () => {
   assert.equal(Life.toISO(cal.weekRange(birth, 33, 51).end), '2025-01-01');
   assert.deepEqual(cal.weekOf(birth, d('2024-12-31')), { year: 33, week: 51, index: 33 * 52 + 51 });
 });
+
+test('le modèle reproduit les espérances de vie sans incapacité de la DREES', () => {
+  const targets = [
+    ['any', 'F', 0, 64.1], ['any', 'M', 0, 63.7], ['any', 'F', 65, 11.8], ['any', 'M', 65, 10.5],
+    ['severe', 'F', 0, 77.5], ['severe', 'M', 0, 73.8], ['severe', 'F', 65, 18.5], ['severe', 'M', 65, 15.8],
+  ];
+  for (const [kind, sex, age, expected] of targets) {
+    near(Life.disabilityFreeYears(kind, sex, age), expected, 0.05, `${kind} ${sex} à ${age} ans`);
+  }
+  for (const sex of ['F', 'M']) {
+    for (let age = 0; age <= 110; age += 5) {
+      assert.ok(Life.disabilityShare('severe', sex, age) < Life.disabilityShare('any', sex, age), `${sex} ${age} ans`);
+    }
+  }
+});
+
+test('années en bonne santé : sans incapacité, puis sans incapacité forte, puis la fin de vie', () => {
+  const now = d('2026-10-24');
+  for (const person of [
+    { birth: '1991-04-17', sex: 'F', category: 'inter', sector: 'sante' },
+    { birth: '1950-01-01', sex: 'M' },
+    { birth: '1991-04-17', sex: 'X', adjust: 5 },
+  ]) {
+    const s = Life.lifeSummary(person, now);
+    const left = s.lifespan - (now - d(person.birth)) / Life.YEAR;
+    assert.ok(s.health.freeYears > 0 && s.health.freeYears < s.health.severeFreeYears && s.health.severeFreeYears < left, person.birth);
+    assert.ok(now < s.health.freeEnd && s.health.freeEnd < s.health.severeFreeEnd && s.health.severeFreeEnd < s.death);
+  }
+  const fit = Life.lifeSummary({ birth: '1991-04-17', sex: 'F', adjust: 5 }, now).health;
+  const base = Life.lifeSummary({ birth: '1991-04-17', sex: 'F' }, now).health;
+  assert.ok(fit.freeYears > base.freeYears, 'l’ajustement personnel allonge aussi les années en bonne santé');
+});
+
+test('chances d’atteindre un âge, à partir du risque de décès de chaque tranche d’âge', () => {
+  const now = d('2026-10-24');
+  for (const person of [{ birth: '1991-04-17', sex: 'F', category: 'cadre' }, { birth: '1960-06-01', sex: 'X', adjust: -4 }]) {
+    const curve = Life.survivalCurve(person, now);
+    assert.equal(curve.at(now), 1);
+    assert.equal(curve.at(d('2000-01-01')), 1, 'le passé est acquis');
+    let previous = 1, years = 0;
+    for (let t = now; t < Life.addYears(now, 95); t += 7 * Life.DAY) {
+      const p = curve.at(t);
+      assert.ok(p <= previous + 1e-12);
+      previous = p;
+      years += (p * 7) / 365.2425;
+    }
+    const expected = Life.expectedLifespan(person, now) - (now - d(person.birth)) / Life.YEAR;
+    near(years, expected, 0.05, `la somme des chances redonne l’espérance de vie (${person.birth})`);
+    // Chances d'arriver dans 30 ans = produit des chances de passer chacune des 30 années.
+    let chained = 1;
+    for (let k = 0; k < 30; k++) chained *= 1 - curve.yearlyRisk(now + k * Life.YEAR);
+    near(curve.at(now + 30 * Life.YEAR), chained, 1e-9, 'enchaînement des tranches');
+  }
+  const curve = Life.survivalCurve({ birth: '1991-04-17', sex: 'M' }, now);
+  assert.ok(curve.yearlyRisk(Life.addYears(d('1991-04-17'), 40)) < 0.005);
+  assert.ok(curve.yearlyRisk(Life.addYears(d('1991-04-17'), 90)) > 0.1);
+});

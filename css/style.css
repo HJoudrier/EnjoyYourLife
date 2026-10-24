@@ -13,6 +13,7 @@
   --past: #2c3a8c;
   --pen: #d42a40;
   --pen-soft: rgba(212, 42, 64, 0.35);
+  --frail: #a8703a;
   --veil: rgba(14, 18, 38, 0.45);
   --shadow: 0 1px 2px rgba(29, 38, 96, 0.06), 0 10px 28px rgba(29, 38, 96, 0.07);
 
@@ -22,6 +23,7 @@
 
   --radius: 10px;
   --margin-w: 2.1rem;
+  --pct-w: 2.3rem;
   --cell-gap: 2px;
 }
 
@@ -36,6 +38,7 @@
     --past: #8fa1e8;
     --pen: #ff5f72;
     --pen-soft: rgba(255, 95, 114, 0.4);
+    --frail: #d6a26c;
     --veil: rgba(4, 6, 16, 0.65);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px rgba(0, 0, 0, 0.28);
     color-scheme: dark;
@@ -52,6 +55,7 @@
   --past: #8fa1e8;
   --pen: #ff5f72;
   --pen-soft: rgba(255, 95, 114, 0.4);
+  --frail: #d6a26c;
   --veil: rgba(4, 6, 16, 0.65);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px rgba(0, 0, 0, 0.28);
   color-scheme: dark;
@@ -206,23 +210,29 @@ b, strong { font-weight: 700; }
   overflow: hidden;
 }
 .lifebar-fill { position: absolute; inset: 0 auto 0 0; background: var(--past); border-radius: 6px 0 0 6px; }
+.lifebar-h1 { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--frail) 30%, transparent); }
+.lifebar-h2 { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--frail) 60%, transparent); }
 .lifebar-now { position: absolute; top: -3px; bottom: -3px; width: 3px; margin-left: -1px; background: var(--pen); border-radius: 2px; }
 .lifebar-labels {
   display: flex; justify-content: space-between; gap: 12px;
   font-size: 0.8rem; color: var(--ink-soft); font-variant-numeric: tabular-nums;
 }
 .lifebar-labels strong { color: var(--ink); }
+.lifebar-note { font-size: 0.85rem; color: var(--ink-soft); }
+.lifebar-note b { color: var(--ink); }
+.lifebar-note .sw { margin: 0 4px 0 2px; vertical-align: -1px; }
 
 .facts {
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
   background: var(--rule);
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   overflow: hidden;
 }
+@media (min-width: 1020px) { .facts { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 .facts > div { background: var(--surface); padding: 14px 16px; display: grid; gap: 2px; align-content: start; }
 .facts dt { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); font-weight: 600; }
 .facts dd { margin: 0; font-family: var(--font-data); font-size: 1.45rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.25; }
@@ -261,6 +271,9 @@ b, strong { font-weight: 700; }
 .sw-now { background: var(--pen); }
 .sw-future { box-shadow: inset 0 0 0 1px var(--rule-strong); }
 .sw-beyond { box-shadow: inset 0 0 0 1px var(--rule); opacity: 0.5; }
+.sw-h1 { background: color-mix(in srgb, var(--frail) 30%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--frail) 50%, transparent); }
+.sw-h2 { background: color-mix(in srgb, var(--frail) 60%, transparent); }
+.sw-pct { font: 600 0.7rem/1 var(--font-data); color: var(--ink); }
 
 .grid-wrap { --gap: var(--cell-gap); }
 .grid-wrap.cal { --margin-w: 2.6rem; }
@@ -269,6 +282,7 @@ b, strong { font-weight: 700; }
   grid-template-columns: repeat(52, minmax(0, 1fr));
   column-gap: var(--gap);
   margin-left: var(--margin-w);
+  margin-right: var(--pct-w);
   margin-bottom: 4px;
   font: 0.62rem/1 var(--font-data);
   color: var(--ink-soft);
@@ -302,6 +316,7 @@ b, strong { font-weight: 700; }
   grid-template-columns: repeat(52, minmax(0, 1fr));
   column-gap: var(--gap);
   padding-left: var(--margin-w);
+  padding-right: var(--pct-w);
 }
 /* L'âge ou l'année s'écrit dans la marge sans agrandir sa ligne. */
 .yr > b {
@@ -318,6 +333,21 @@ b, strong { font-weight: 700; }
   pointer-events: none;
 }
 .yr > b:empty { display: none; }
+/* Les chances d'atteindre la ligne, dans la marge de droite. */
+.yr > .pct {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: var(--pct-w);
+  transform: translateY(-50%);
+  font: 600 0.62rem/1 var(--font-data);
+  color: var(--ink);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.yr > .pct small { font-size: 0.85em; margin-left: 1px; }
+.yr > .pct.minor { font-weight: 400; color: var(--ink-soft); }
 .c {
   display: block;
   aspect-ratio: 1;
@@ -328,6 +358,8 @@ b, strong { font-weight: 700; }
 .c.p { background: var(--past); box-shadow: none; }
 .c.x { box-shadow: inset 0 0 0 1px var(--rule); opacity: 0.45; }
 .c.b { visibility: hidden; }
+.c.h1 { background: color-mix(in srgb, var(--frail) 22%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--frail) 50%, transparent); }
+.c.h2 { background: color-mix(in srgb, var(--frail) 50%, transparent); box-shadow: none; }
 .c.r { background: color-mix(in srgb, var(--c) 42%, transparent); box-shadow: none; }
 .c.r.p { background: var(--c); }
 .c.e { background: var(--c); box-shadow: 0 0 0 1px var(--surface), 0 0 0 2px var(--c); position: relative; z-index: 1; }
@@ -368,6 +400,8 @@ b, strong { font-weight: 700; }
 }
 .cell-info > div { min-width: 0; }
 .cell-info .muted, .muted { color: var(--ink-soft); }
+.cell-stats { margin-top: 2px; color: var(--ink-soft); font-size: 0.86rem; }
+.cell-stats b { color: var(--ink); font-family: var(--font-data); font-variant-numeric: tabular-nums; }
 .cell-info ul { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; }
 
 /* ---------- Colonne de droite ---------- */
@@ -584,7 +618,7 @@ input[type="range"] { width: 100%; accent-color: var(--ink); }
 /* ---------- Petits écrans ---------- */
 
 @media (max-width: 640px) {
-  :root { --margin-w: 1.55rem; --cell-gap: 1px; }
+  :root { --margin-w: 1.55rem; --pct-w: 1.75rem; --cell-gap: 1px; }
   .life { padding: 14px 10px 12px; }
   .yr > b { padding-right: 8px; font-size: 0.55rem; }
   .grid-wrap.cal { --margin-w: 2.05rem; }
@@ -592,6 +626,8 @@ input[type="range"] { width: 100%; accent-color: var(--ink); }
   .c { border-radius: 1px; }
   .c.e { box-shadow: 0 0 0 1px var(--c); }
   .facts { grid-template-columns: 1fr 1fr; }
+  .yr > .pct { font-size: 0.55rem; }
+  .yr > .pct.minor { display: none; }
   .facts > div { padding: 12px; }
   .facts dd { font-size: 1.1rem; }
   .form { padding: 18px; }

@@ -4,6 +4,8 @@ Une application simple pour voir où vous en êtes de votre vie.
 
 Vous indiquez votre date de naissance, votre sexe et votre métier. L’application estime votre espérance de vie et dessine votre vie entière : **une ligne par année, un carré par semaine**, de la naissance jusqu’à l’âge estimé du décès. Les semaines vécues sont remplies, la semaine en cours est marquée en rouge, celles qui restent sont vides.
 
+Elle indique aussi combien de ces années vous vivrez en moyenne **sans incapacité** et **sans incapacité forte** : sur la grille, les semaines où l’on vit en moyenne avec une incapacité, puis une incapacité forte, sont teintées. À droite de chaque ligne, un pourcentage donne vos **chances d’atteindre cet âge**. La grille continue au-delà de l’espérance de vie, jusqu’à l’âge que vous avez moins d’une chance sur dix d’atteindre.
+
 Vous pouvez ensuite :
 
 - **ajouter des événements** passés ou à venir (mariage, diplôme, déménagement, voyage, retraite…), ponctuels ou sur une période, qui apparaissent sur la grille ;
@@ -66,6 +68,25 @@ Le métier saisi propose automatiquement une catégorie et, quand il ne fait gu�
 
 Le même calcul s’applique à vous et à vos proches. Un curseur d’**ajustement personnel** (de −10 à +10 ans) permet en plus de tenir compte de votre santé ou de votre hygiène de vie.
 
+### Années en bonne santé
+
+L’espérance de vie sans incapacité compte les années vécues sans être limité dans ses activités habituelles depuis au moins six mois à cause d’un problème de santé. L’espérance de vie sans incapacité forte ne compte que les limitations sévères. L’application calcule les deux par la méthode de Sullivan : à chaque âge, la probabilité d’être en vie est multipliée par la part de la population sans incapacité à cet âge. Cette part suit une courbe calée pour retrouver les chiffres de la DREES :
+
+| | Sans incapacité, à la naissance | Sans incapacité, à 65 ans | Sans incapacité forte, à la naissance | Sans incapacité forte, à 65 ans |
+|---|---|---|---|---|
+| Femmes | 64,1 ans | 11,8 ans | 77,5 ans | 18,5 ans |
+| Hommes | 63,7 ans | 10,5 ans | 73,8 ans | 15,8 ans |
+
+Chiffres 2024, sauf l’incapacité forte à la naissance (2023). Comme l’espérance de vie, ces durées tiennent compte de votre âge, de votre sexe, de votre métier, de votre secteur et de l’ajustement personnel. L’application les présente comme des périodes : d’abord les années sans incapacité, puis celles avec une incapacité, dont les dernières avec une incapacité forte. C’est une façon de lire une moyenne : en réalité, une incapacité peut survenir plus tôt, plus tard, ou disparaître.
+
+### Chances d’atteindre un âge
+
+Le pourcentage à droite de chaque ligne est la probabilité d’être encore en vie au début de cette ligne : à votre anniversaire, ou au 1er janvier si la grille suit les années civiles. Il se calcule en enchaînant les risques de décès de chaque tranche d’âge : les chances d’atteindre 80 ans sont les chances de passer l’année suivante, multipliées par celles de passer l’année d’après, et ainsi de suite jusqu’à 80 ans. Les risques viennent du même modèle de mortalité que l’espérance de vie, si bien que la somme de ces chances redonne les années qu’il vous reste. Au survol d’une semaine à venir, l’application affiche ces chances et le risque de décès dans l’année à cet âge.
+
+Sur mobile, seuls les pourcentages des lignes multiples de 5 sont affichés.
+
+### Limites
+
 Ce n’est qu’une moyenne statistique, pas une prédiction. Le modèle utilise la mortalité observée aujourd’hui et ne tient pas compte des progrès futurs, qui allongeront probablement la vie des plus jeunes.
 
 Sources :
@@ -74,6 +95,7 @@ Sources :
 - [Bilan démographique 2025](https://www.insee.fr/fr/statistiques/8719824), Insee Première n° 2087
 - [Espérance de vie par catégorie socioprofessionnelle, 2020-2022](https://www.insee.fr/fr/statistiques/8220688), Insee Première n° 2005
 - [L’espérance de vie par niveau de vie et catégorie sociale](https://www.cor-retraites.fr/sites/default/files/2025-02/1.%20Insee_cor_esperance%20de%20vie_avec%20annexe.pdf), Insee pour le Conseil d’orientation des retraites, 2025 (écarts à 60 ans)
+- [L’espérance de vie sans incapacité à 65 ans est de 11,8 ans pour les femmes et de 10,5 ans pour les hommes en 2024](https://drees.solidarites-sante.gouv.fr/sites/default/files/2026-01/ER1363_esperance_de_vie_sans_incapacit%C3%A9_0.pdf), DREES, Études et Résultats n° 1363, 2026
 - [Cosmop : analyse de la mortalité par secteurs d’activité économique](https://www.santepubliquefrance.fr/docs/article/cosmop-analyse-de-la-mortalite-par-secteurs-dactivite-economique), Santé publique France
 
 ### La grille
@@ -105,7 +127,7 @@ La relation s’arrête à la première de ces dates : la fin de votre vie estim
 ```
 index.html        la page
 css/style.css     la mise en forme (thèmes clair et sombre)
-js/life.js        les calculs : dates, espérance de vie, grille, temps ensemble, métiers et secteurs
+js/life.js        les calculs : dates, espérance de vie (dont sans incapacité), chances de survie, grille, temps ensemble, métiers et secteurs
 js/app.js         l’interface
 tests/            tests des calculs
 ```
@@ -116,7 +138,7 @@ tests/            tests des calculs
 npm test
 ```
 
-Les tests (Node 18 ou plus, sans dépendance) vérifient notamment que le modèle retrouve les chiffres de l’Insee (y compris les écarts par catégorie à 35 et 60 ans), que chaque date tombe dans la bonne semaine de la grille, que le métier et le secteur d’un proche changent bien la durée de la relation et que le temps passé ensemble est bien réparti entre les étapes.
+Les tests (Node 18 ou plus, sans dépendance) vérifient notamment que le modèle retrouve les chiffres de l’Insee (y compris les écarts par catégorie à 35 et 60 ans) et de la DREES, que la somme des chances de survie redonne l’espérance de vie, que chaque date tombe dans la bonne semaine de la grille, que le métier et le secteur d’un proche changent bien la durée de la relation et que le temps passé ensemble est bien réparti entre les étapes.
 
 ## Licence
 

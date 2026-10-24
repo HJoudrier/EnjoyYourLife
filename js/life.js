@@ -571,6 +571,19 @@
     };
   }
 
+  // Principales causes de décès pour un âge et un sexe, à partir du tableau
+  // de js/causes.js. Sexe non précisé : les deux sexes ensemble.
+  function causesAt(table, sex, age) {
+    const group = table.groups.find((g) => age >= g.from && (g.to == null || age < g.to)) || table.groups[table.groups.length - 1];
+    const entry = group[sex === 'F' || sex === 'M' ? sex : 'T'];
+    return {
+      from: group.from,
+      to: group.to,
+      deaths: entry.deaths,
+      top: entry.top.map(([id, share]) => ({ id, label: table.labels[id], share })),
+    };
+  }
+
   // Part des jours passés ensemble à une date donnée (0 à 1), ou null hors relation.
   function ratioAt(timeline, t) {
     for (const p of timeline.phases) if (p.from <= t && t < p.to) return p.ratio;
@@ -779,6 +792,7 @@
     lifeSummary,
     relationTimeline,
     ratioAt,
+    causesAt,
     normalize,
     matchJob,
     matchSector,

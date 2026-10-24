@@ -15,6 +15,7 @@
   const pct = new Intl.NumberFormat('fr-FR', { style: 'percent', maximumFractionDigits: 0 });
   const pct1 = new Intl.NumberFormat('fr-FR', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const pct2 = new Intl.NumberFormat('fr-FR', { style: 'percent', maximumFractionDigits: 2 });
+  const pctSig = new Intl.NumberFormat('fr-FR', { style: 'percent', maximumSignificantDigits: 2 });
   const dfLong = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
   const dfMonth = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
   const dfDay = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', timeZone: 'UTC' });
@@ -87,6 +88,22 @@
     return q < 0.01 ? pct2.format(q) : pct1.format(q);
   }
 
+  // Une probabilité en « 1 sur N », arrondi à deux chiffres : 0,0007 → « 1 sur 1 400 ».
+  function oneIn(p) {
+    if (!(p > 0)) return 'quasi nul';
+    const n = 1 / p;
+    if (n < 1.5) return 'presque certain';
+    const digits = Math.max(0, Math.floor(Math.log10(n)) - 1);
+    const rounded = Math.round(n / 10 ** digits) * 10 ** digits;
+    return `1 sur ${nf.format(rounded)}`;
+  }
+
+  function ageRangeText(from, to) {
+    if (to == null) return `${from} ans et plus`;
+    if (from === 0) return 'moins d’un an';
+    return `${from} à ${to - 1} ans`;
+  }
+
   function yearsText(years) {
     return years < 1 ? 'moins d’un an' : plural(Math.round(years), 'an', 'ans');
   }
@@ -118,7 +135,7 @@
     const ev = (data) => ({ id: uid(), demo: true, type: 'point', ...data });
     return {
       demo: true,
-      settings: { gridMode: 'life', expanded: [], relSort: { by: 'custom', dir: 'desc' } },
+      settings: { gridMode: 'life', expanded: [], relSort: { by: 'custom', dir: 'desc' }, causesTop: 5 },
       profile: { birth: '1991-04-17', sex: 'F', job: 'Infirmière', category: 'inter', sector: 'sante', adjust: 0 },
       relations: [
         rel('child', { name: 'Léa', start: '2019-09-03', otherSex: 'F', color: COLORS[4] }),
@@ -213,6 +230,8 @@
         by: saved.relSort && (saved.relSort.by === 'custom' || SORT_KEYS[saved.relSort.by]) ? saved.relSort.by : 'custom',
         dir: saved.relSort && saved.relSort.dir === 'asc' ? 'asc' : 'desc',
       },
+      // Nombre de causes de décès affichées pour une semaine.
+      causesTop: saved.causesTop === 10 ? 10 : 5,
     };
     return { demo: !!raw.demo, settings, profile, relations, events };
   }
@@ -231,7 +250,7 @@
   }
 
   let state = load();
-  const ui = { focus: null, selected: null, hover: null };
+  const ui = { focus: null, selected: null, shown: null };
   let view = null; // calculs du dernier rendu
 
   /* ------------------------------------------------------------------ *
@@ -441,6 +460,7 @@
   }
 
   function showCell(i) {
+    ui.shown = i;
     const box = $('#cell-info');
     if (i == null) {
       box.innerHTML = `<div class="muted">Survole ou touche une semaine pour la voir en détail. Touche-la à nouveau pour y ajouter un événement.</div>`;
@@ -466,7 +486,9 @@
         : i >= cells.severe ? ' · en moyenne, avec une incapacité forte'
         : i >= cells.disabled ? ' · en moyenne, avec une incapacité'
         : ' · en moyenne, sans incapacité';
-      stats = `<p class="cell-stats">Chances d’être encore en vie : <b>${chanceText(view.curve.at(range.start))}</b> · risque de décès dans l’année à cet âge : ${riskText(view.curve.yearlyRisk(range.start))}${health}</p>`;
+      const risk = view.curve.yearlyRisk(range.start);
+      stats = `<p class="cell-stats">Chances d’être encore en vie : <b>${chanceText(view.curve.at(range.start))}</b> · risque de décès dans l’année à cet âge : ${riskText(risk)}, soit ${oneIn(risk)}${health}</p>`;
+      stats += causesBlock(L.fullYears(life.birth, Math.max(range.start, life.birth)), risk);
     }
     const m = view.marks.get(i);
     let items = m ? m.items.map((e) => `<li>${esc(e.emoji)} ${esc(e.title)}</li>`).join('') : '';
@@ -485,6 +507,31 @@
         ${items ? `<ul>${items}</ul>` : ''}
       </div>
       <button type="button" class="btn btn-small" data-action="add-at" data-i="${i}">Ajouter un événement cette semaine</button>`;
+  }
+
+  // Les principales causes de décès à cet âge, avec leur part et le risque qu'elles représentent pour toi.
+  function causesBlock(age, risk) {
+    const sex = state.profile.sex;
+    const c = L.causesAt(window.Causes, sex, age);
+    const n = state.settings.causesTop;
+    const who = sex === 'F' ? 'femmes' : sex === 'M' ? 'hommes' : 'personnes';
+    const rows = c.top.slice(0, n).map((cause, i) => `
+      <li>
+        <span class="cause-rank">${i + 1}</span>
+        <span class="cause-name">${esc(cause.label)}</span>
+        <span class="cause-share">${pct1.format(cause.share)} des décès</span>
+        <span class="cause-risk">${pctSig.format(risk * cause.share)} · ${oneIn(risk * cause.share)}</span>
+      </li>`).join('');
+    const covered = c.top.slice(0, n).reduce((sum, cause) => sum + cause.share, 0);
+    return `
+      <div class="causes">
+        <div class="causes-head">
+          <span>Principales causes de décès des ${who} de ${ageRangeText(c.from, c.to)} <span class="muted">(France, ${window.Causes.year})</span></span>
+          <button type="button" class="btn-link" data-action="causes-top">${n === 5 ? 'Voir le top 10' : 'Voir le top 5'}</button>
+        </div>
+        <ol class="cause-list">${rows}</ol>
+        <p class="muted causes-note">Pour chaque cause : sa part parmi les décès à cet âge, puis ton risque d’en mourir dans l’année (ton risque de décès multiplié par cette part). Ces ${n} causes représentent ${pct.format(covered)} des décès ; les autres se répartissent entre de nombreuses causes.</p>
+      </div>`;
   }
 
   function relationEndText(rel, tl) {
@@ -1280,6 +1327,12 @@
     const id = btn.dataset.id;
     switch (btn.dataset.action) {
       case 'toggle-rel': toggleRel(id); break;
+      case 'causes-top':
+        state.settings.causesTop = state.settings.causesTop === 5 ? 10 : 5;
+        save();
+        showCell(ui.shown);
+        if ($('[data-action="causes-top"]')) $('[data-action="causes-top"]').focus();
+        break;
       case 'move-rel': moveRel(id, Number(btn.dataset.dir)); break;
       case 'focus': setFocus(ui.focus === id ? null : id); break;
       case 'unfocus': setFocus(null); break;

@@ -36,6 +36,7 @@
         <li><a href="#secteur">Le secteur d’activité</a></li>
         <li><a href="#sante">Les années en bonne santé</a></li>
         <li><a href="#chances">Les chances d’atteindre un âge</a></li>
+        <li><a href="#causes">Les causes de décès</a></li>
         <li><a href="#grille">La grille des semaines</a></li>
         <li><a href="#proches">Le temps avec tes proches</a></li>
         <li><a href="#donnees">Tes données</a></li>
@@ -182,6 +183,25 @@
         <p>L’espérance de vie est une moyenne, pas l’âge où l’on a une chance sur deux d’être en vie : celui-ci est un peu plus élevé. La grille continue donc au-delà de l’espérance de vie, en carrés pâles, jusqu’à l’âge que tu as moins d’une chance sur dix d’atteindre. Sur mobile, seuls les pourcentages des lignes multiples de 5 sont affichés.</p>
       </section>
 
+      <section id="causes" aria-labelledby="h-causes">
+        <h2 id="h-causes">Les causes de décès</h2>
+        <p>En sélectionnant une semaine à venir, tu vois les principales causes de décès à cet âge, pour ton sexe : le top 5, ou le top 10 en touchant « Voir le top 10 ». Pour chaque cause, deux chiffres :</p>
+        <dl>
+          <div><dt>Part des décès</dt><dd>La part de cette cause parmi tous les décès des personnes de ta tranche d’âge et de ton sexe en France.</dd></div>
+          <div><dt>Ton risque d’en mourir dans l’année</dt><dd>Ton risque de décès dans l’année à cet âge, multiplié par cette part. Il est donné en pourcentage et sous la forme « 1 sur N ».</dd></div>
+        </dl>
+        <p>Les chiffres viennent du CépiDc de l’Inserm, qui code les causes inscrites sur les certificats de décès, tels que les publie Eurostat (jeu de données hlth_cd_aro). Ce sont les décès de l’année <span id="causes-year"></span> des personnes résidant en France, regroupés par tranches d’âge de dix ans environ. Si le sexe n’est pas précisé, l’application prend les deux sexes ensemble.</p>
+        <p>Seules les causes précises sont classées : un cancer d’un organe donné, l’infarctus, l’AVC, le suicide, les accidents de transport… Les restes de chapitre (« autres tumeurs », « autres maladies de l’appareil circulatoire ») et les causes inconnues sont écartés, car ils ne disent pas de quoi l’on meurt. C’est pourquoi les dix premières causes ne couvrent qu’une partie des décès : de 40 à 55 % selon l’âge, et plus de 80 % avant un an.</p>
+        <p>Ton risque de décès dans l’année tient compte de ton métier et de ton secteur. La répartition entre les causes, elle, est la moyenne nationale pour ton âge et ton sexe.</p>
+        <div class="table-wrap">
+          <table id="t-causes">
+            <caption>Les cinq premières causes précises de décès selon l’âge et le sexe, en part de l’ensemble des décès. Source : Eurostat, données CépiDc-Inserm.</caption>
+            <thead><tr><th scope="col">Âge</th><th scope="col">Femmes</th><th scope="col">Hommes</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
       <section id="grille" aria-labelledby="h-grille">
         <h2 id="h-grille">La grille des semaines</h2>
         <p>Chaque ligne est une année, chaque carré une semaine, et toutes les lignes ont la même taille. Un réglage au-dessus de la grille choisit l’alignement :</p>
@@ -244,6 +264,7 @@
           <li>Le rattachement d’un métier à sa catégorie et à son secteur se fait par mots-clés et peut se tromper : vérifie la catégorie proposée.</li>
           <li>Les années en bonne santé sont des moyennes présentées comme des périodes ; la santé de chacun suit un chemin qui lui est propre.</li>
           <li>Les données Insee par catégorie portent sur 2020-2022, une période marquée par l’épidémie de Covid-19.</li>
+          <li>La répartition des causes de décès est celle d’une seule année et de toute la France ; elle ne dépend ni du métier ni de la région. Aux âges où il y a peu de décès (enfants, jeunes adultes), les parts varient d’une année à l’autre.</li>
         </ul>
       </section>
 
@@ -270,6 +291,12 @@
           <li><a href="https://drees.solidarites-sante.gouv.fr/sites/default/files/2026-01/ER1363_esperance_de_vie_sans_incapacit%C3%A9_0.pdf">L’espérance de vie sans incapacité à 65 ans est de 11,8 ans pour les femmes et de 10,5 ans pour les hommes en 2024</a>, DREES, Études et Résultats n° 1363, janvier 2026.</li>
           <li><a href="https://drees.solidarites-sante.gouv.fr/sites/default/files/2024-12/ER1323M.pdf">Espérance de vie sans incapacité en 2023</a>, DREES, Études et Résultats n° 1323, décembre 2024 : espérance de vie sans incapacité forte à la naissance.</li>
         </ul>
+        <h3>Causes de décès</h3>
+        <ul class="sources">
+          <li><a href="https://ec.europa.eu/eurostat/databrowser/view/hlth_cd_aro/default/table?lang=fr">Causes de décès, nombres absolus par pays de résidence et d’occurrence (hlth_cd_aro)</a>, Eurostat, à partir des données du CépiDc de l’Inserm.</li>
+          <li><a href="https://www.cepidc.inserm.fr/">Centre d’épidémiologie sur les causes médicales de décès (CépiDc)</a>, Inserm.</li>
+          <li><a href="https://www.data.gouv.fr/datasets/causes-de-deces">Causes de décès</a>, DREES et CépiDc, data.gouv.fr.</li>
+        </ul>
         <h3>L’idée</h3>
         <ul class="sources">
           <li><a href="https://waitbutwhy.com/2014/05/life-weeks.html">Your Life in Weeks</a>, Tim Urban, Wait But Why, 2014 : la vie en carrés de semaines.</li>
@@ -284,6 +311,7 @@
   </footer>
 
   <script src="js/life.js"></script>
+  <script src="js/causes.js"></script>
   <script src="js/doc.js"></script>
 </body>
 </html>

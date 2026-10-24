@@ -87,6 +87,17 @@ Le pourcentage à droite de chaque ligne est la probabilité d’être encore en
 
 Sur mobile, seuls les pourcentages des lignes multiples de 5 sont affichés.
 
+### Causes de décès
+
+En sélectionnant une semaine à venir, l’application affiche les principales causes de décès à cet âge pour ton sexe (top 5, ou top 10) : la part de chaque cause parmi les décès, et ton risque d’en mourir dans l’année (ton risque de décès multiplié par cette part), en pourcentage et sous la forme « 1 sur N ».
+
+Les données viennent du CépiDc de l’Inserm, publiées par [Eurostat](https://ec.europa.eu/eurostat/databrowser/view/hlth_cd_aro/default/table?lang=fr) (jeu hlth_cd_aro) : décès de 2024 des résidents en France, par sexe et par tranche d’âge. Seules les causes précises sont classées (un cancer d’un organe donné, l’infarctus, l’AVC, le suicide…) ; les restes de chapitre et les causes inconnues sont écartés. Le fichier `js/causes.js` est généré par un script, à relancer quand Eurostat publie une nouvelle année :
+
+```sh
+python3 scripts/update-causes.py          # dernière année complète
+python3 scripts/update-causes.py 2023     # une année précise
+```
+
 ### Limites
 
 Ce n’est qu’une moyenne statistique, pas une prédiction. Le modèle utilise la mortalité observée aujourd’hui et ne tient pas compte des progrès futurs, qui allongeront probablement la vie des plus jeunes.
@@ -132,7 +143,9 @@ documentation.html  les sources des données et les méthodes de calcul
 css/style.css       la mise en forme (thèmes clair et sombre)
 js/life.js          les calculs : dates, espérance de vie (dont sans incapacité), chances de survie, grille, temps ensemble, métiers et secteurs
 js/app.js           l’interface
+js/causes.js        les principales causes de décès par âge et par sexe (fichier généré)
 js/doc.js           les tableaux de la documentation, calculés avec life.js
+scripts/            mise à jour des données de causes de décès depuis Eurostat
 tests/              tests des calculs
 ```
 

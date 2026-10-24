@@ -86,6 +86,15 @@
     return `<tr><th scope="row">${label}</th>${cells}</tr>`;
   }));
 
+  // Causes de décès : les cinq premières par âge et par sexe.
+  const C = window.Causes;
+  const share = new Intl.NumberFormat('fr-FR', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const yearSpan = document.getElementById('causes-year');
+  if (yearSpan) yearSpan.textContent = C.year;
+  const ageRange = (g) => (g.to == null ? `${g.from} ans et plus` : g.from === 0 ? 'Moins d’un an' : `${g.from} à ${g.to - 1} ans`);
+  const top5 = (entry) => entry.top.slice(0, 5).map(([id, s]) => `${esc(C.labels[id])} <span class="note">${share.format(s)}</span>`).join('<br>');
+  fill('t-causes', C.groups.map((g) => `<tr><th scope="row">${ageRange(g)}</th><td>${top5(g.F)}</td><td>${top5(g.M)}</td></tr>`));
+
   // Temps ensemble : rythmes et étapes proposées.
   fill('t-frequencies', L.FREQUENCIES.map((f) => `<tr><th scope="row">${esc(f.label)}</th><td class="num">${f.days}</td></tr>`));
   fill('t-relations', Object.values(L.RELATION_TYPES).map((t) => {

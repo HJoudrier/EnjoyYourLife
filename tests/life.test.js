@@ -250,3 +250,37 @@ test('chances d’atteindre un âge, à partir du risque de décès de chaque tr
   assert.ok(curve.yearlyRisk(Life.addYears(d('1991-04-17'), 40)) < 0.005);
   assert.ok(curve.yearlyRisk(Life.addYears(d('1991-04-17'), 90)) > 0.1);
 });
+
+test('causes de décès : tableau complet et cohérent', () => {
+  const Causes = require('../js/causes.js');
+  assert.ok(Causes.year >= 2020);
+  let expected = 0;
+  for (const g of Causes.groups) {
+    assert.equal(g.from, expected, 'tranches contiguës');
+    expected = g.to;
+    for (const sex of ['F', 'M', 'T']) {
+      const e = g[sex];
+      assert.ok(e.deaths > 0);
+      assert.ok(e.top.length > 0 && e.top.length <= 10);
+      let previous = 1, total = 0;
+      for (const [id, share] of e.top) {
+        assert.ok(Causes.labels[id], `libellé de ${id}`);
+        assert.ok(share > 0 && share <= previous, `${g.from} ${sex} trié`);
+        previous = share;
+        total += share;
+      }
+      assert.ok(total <= 1);
+    }
+  }
+  assert.equal(expected, null, 'la dernière tranche est ouverte');
+});
+
+test('causes de décès selon l’âge et le sexe', () => {
+  const Causes = require('../js/causes.js');
+  const at = (sex, age) => Life.causesAt(Causes, sex, age);
+  assert.deepEqual([at('F', 40).from, at('F', 40).to], [35, 45]);
+  assert.deepEqual([at('M', 0).from, at('M', 0.5).to], [0, 1]);
+  assert.equal(at('M', 101).to, null);
+  assert.equal(at('X', 40).deaths, Causes.groups[5].T.deaths);
+  assert.equal(at('F', 40).top[0].label, Causes.labels[Causes.groups[5].F.top[0][0]]);
+});

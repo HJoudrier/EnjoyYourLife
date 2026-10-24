@@ -30,7 +30,7 @@ npm start          # puis http://localhost:8000
 
 Au premier lancement, l’application montre un exemple (Camille, infirmière née en 1991). Clique sur **Commencer avec ma vie** pour saisir ton profil ; les exemples disparaissent.
 
-Sur la grille, choisis d’aligner les lignes sur tes anniversaires ou sur les 1er janvier. Survole ou touche une semaine pour voir ses dates et ses événements ; touche-la une seconde fois pour y ajouter un événement. Au clavier : flèches pour se déplacer, Entrée pour ajouter, Échap pour quitter la vue d’un proche.
+Les proches apparaissent en vignettes réduites, avec la part du temps ensemble déjà vécue et sa barre ; touche une vignette pour afficher le détail, puis à nouveau pour la réduire. Sur la grille, choisis d’aligner les lignes sur tes anniversaires ou sur les 1er janvier. Survole ou touche une semaine pour voir ses dates et ses événements ; touche-la une seconde fois pour y ajouter un événement. Au clavier : flèches pour se déplacer, Entrée pour ajouter, Échap pour quitter la vue d’un proche.
 
 ### Tes données
 

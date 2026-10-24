@@ -411,7 +411,7 @@ a.brand { text-decoration: none; color: inherit; }
 .panel { display: grid; gap: 14px; }
 .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 
-.relations { display: grid; gap: 14px; }
+.relations { display: grid; gap: 10px; }
 .rel {
   background: var(--surface);
   border-radius: var(--radius);
@@ -421,10 +421,37 @@ a.brand { text-decoration: none; color: inherit; }
   gap: 12px;
   min-width: 0;
 }
+.rel.is-compact { padding: 12px 16px 14px; gap: 10px; }
 .rel.is-focus { box-shadow: var(--shadow), 0 0 0 2px var(--c); }
-.rel-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; align-self: center; }
-.rel-kind { font-size: 0.85rem; color: var(--ink-soft); }
+
+/* L'en-tête de la vignette la déplie ou la réduit. */
+.rel-title { font-size: 1rem; }
+.rel-toggle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.rel-toggle:focus-visible { outline: 2px solid var(--pen); outline-offset: 4px; border-radius: 4px; }
+.rel-id { min-width: 0; }
+.rel.is-compact .rel-id { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rel-name { font-weight: 700; margin-right: 4px; }
+.rel-kind { font-size: 0.85rem; font-weight: 400; color: var(--ink-soft); }
+.rel-mini { font-family: var(--font-data); font-size: 1.25rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.rel-mini small { font-size: 0.6em; margin-left: 1px; }
+.chev { width: 16px; height: 16px; color: var(--ink-soft); transition: transform 0.15s; }
+.rel-toggle:hover .chev { color: var(--ink); }
+.rel-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.rel-more { display: grid; gap: 12px; }
 .rel-share { display: flex; align-items: baseline; gap: 12px; }
 .rel-share .big {
   font-family: var(--font-data);
@@ -683,4 +710,5 @@ input[type="range"] { width: 100%; accent-color: var(--ink); }
 @media (prefers-reduced-motion: reduce) {
   .c.n { animation: none; }
   .btn { transition: none; }
+  .chev { transition: none; }
 }

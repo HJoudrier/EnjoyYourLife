@@ -118,7 +118,7 @@
     const ev = (data) => ({ id: uid(), demo: true, type: 'point', ...data });
     return {
       demo: true,
-      settings: { gridMode: 'life' },
+      settings: { gridMode: 'life', expanded: [] },
       profile: { birth: '1991-04-17', sex: 'F', job: 'Infirmière', category: 'inter', sector: 'sante', adjust: 0 },
       relations: [
         rel('child', { name: 'Léa', start: '2019-09-03', otherSex: 'F', color: COLORS[4] }),
@@ -196,7 +196,12 @@
           color: isColor(e.color) ? e.color : COLORS[i % COLORS.length],
         };
       });
-    const settings = { gridMode: raw.settings && L.GRID_MODES[raw.settings.gridMode] ? raw.settings.gridMode : 'life' };
+    const saved = raw.settings || {};
+    const settings = {
+      gridMode: L.GRID_MODES[saved.gridMode] ? saved.gridMode : 'life',
+      // Proches dont la vignette est dépliée.
+      expanded: Array.isArray(saved.expanded) ? saved.expanded.filter((id) => relations.some((r) => r.id === id)) : [],
+    };
     return { demo: !!raw.demo, settings, profile, relations, events };
   }
 
@@ -507,6 +512,9 @@
           : ` · ${formatParts(L.diffParts(tl.otherBirth, now), false)}`;
       }
 
+      const open = state.settings.expanded.includes(rel.id);
+      const domId = 'rel-' + String(rel.id).replace(/[^a-zA-Z0-9_-]/g, '');
+      const percent = tl.status === 'future' ? 0 : tl.status === 'ended' ? 100 : Math.round(tl.share * 100);
       let share, left;
       if (tl.status === 'future') {
         share = `<span class="big">0<small>%</small></span><p>Cette relation commence en ${dfMonth.format(tl.start)}. Tout le temps ensemble est devant vous.</p>`;
@@ -515,7 +523,7 @@
         share = `<span class="big">100<small>%</small></span><p>Cette relation a pris fin le ${dfLong.format(tl.end)}.</p>`;
         left = `Vous avez partagé environ <b>${nf.format(Math.round(tl.pastDays))} jours</b>${formatTogether(tl.pastDays)}.`;
       } else {
-        share = `<span class="big">${Math.round(tl.share * 100)}<small>%</small></span><p>du temps que vous passerez ensemble est déjà derrière vous, alors que ${pct.format(tl.calendarShare)} de la relation s’est écoulée.</p>`;
+        share = `<span class="big">${percent}<small>%</small></span><p>du temps que vous passerez ensemble est déjà derrière vous, alors que ${pct.format(tl.calendarShare)} de la relation s’est écoulée.</p>`;
         left = `Il vous reste environ <b>${nf.format(Math.round(tl.futureDays))} jours</b> ensemble${formatTogether(tl.futureDays)}, répartis ${relationEndText(rel, tl)}.`;
       }
 
@@ -544,20 +552,25 @@
       }).join('');
 
       return `
-        <article class="rel${ui.focus === rel.id ? ' is-focus' : ''}" style="--c:${rel.color}">
-          <div class="rel-head">
-            <span class="dot"></span>
-            <h3>${esc(rel.name)}</h3>
-            <span class="rel-kind">${esc(type.label)}${ageInfo}${rel.job ? ` · ${esc(rel.job)}` : ''}</span>
-          </div>
-          <div class="rel-share">${share}</div>
+        <article class="rel${open ? '' : ' is-compact'}${ui.focus === rel.id ? ' is-focus' : ''}" style="--c:${rel.color}">
+          <h3 class="rel-title">
+            <button type="button" class="rel-toggle" data-action="toggle-rel" data-id="${esc(rel.id)}" aria-expanded="${open}" aria-controls="${domId}-share ${domId}-more">
+              <span class="dot"></span>
+              <span class="rel-id"><span class="rel-name">${esc(rel.name)}</span> <span class="rel-kind">${esc(type.label)}${ageInfo}${rel.job ? ` · ${esc(rel.job)}` : ''}</span></span>
+              <span class="rel-mini"${open ? ' hidden' : ''}>${percent}<small>%</small><span class="visually-hidden"> du temps ensemble déjà vécu</span></span>
+              <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </h3>
+          <div class="rel-share" id="${domId}-share"${open ? '' : ' hidden'}>${share}</div>
           <div class="rel-bar" aria-hidden="true">${seg.join('')}</div>
-          <div class="rel-bar-labels" aria-hidden="true"><span>déjà vécu</span><span>à venir</span></div>
-          <p class="rel-left">${left}</p>
-          ${phases ? `<ul class="phase-list">${phases}</ul>` : ''}
-          <div class="rel-actions">
-            <button type="button" class="btn btn-small" data-action="focus" data-id="${esc(rel.id)}" aria-pressed="${ui.focus === rel.id}">${ui.focus === rel.id ? 'Revenir à toute ma vie' : 'Voir sur la grille'}</button>
-            <button type="button" class="btn btn-small btn-quiet" data-action="edit-rel" data-id="${esc(rel.id)}">Modifier</button>
+          <div class="rel-more" id="${domId}-more"${open ? '' : ' hidden'}>
+            <div class="rel-bar-labels" aria-hidden="true"><span>déjà vécu</span><span>à venir</span></div>
+            <p class="rel-left">${left}</p>
+            ${phases ? `<ul class="phase-list">${phases}</ul>` : ''}
+            <div class="rel-actions">
+              <button type="button" class="btn btn-small" data-action="focus" data-id="${esc(rel.id)}" aria-pressed="${ui.focus === rel.id}">${ui.focus === rel.id ? 'Revenir à toute ma vie' : 'Voir sur la grille'}</button>
+              <button type="button" class="btn btn-small btn-quiet" data-action="edit-rel" data-id="${esc(rel.id)}">Modifier</button>
+            </div>
           </div>
         </article>`;
     }).join('');
@@ -667,6 +680,18 @@
     render();
     if (date != null) select(view.cells.scheme.weekOf(view.life.birth, date).index);
   }));
+
+  // Déplie ou réduit la vignette d'un proche, en gardant le focus clavier sur son bouton.
+  function toggleRel(id) {
+    const list = state.settings.expanded;
+    const i = list.indexOf(id);
+    if (i >= 0) list.splice(i, 1);
+    else list.push(id);
+    save();
+    renderRelations();
+    const btn = [...document.querySelectorAll('[data-action="toggle-rel"]')].find((b) => b.dataset.id === id);
+    if (btn) btn.focus();
+  }
 
   function setFocus(id) {
     ui.focus = id;
@@ -1101,7 +1126,10 @@
     if (!r.phases.length) return showError(err, 'Ajoute au moins une étape.');
     const old = state.relations.find((x) => x.id === r.id);
     if (old) Object.assign(old, r, { demo: old.demo });
-    else state.relations.push(r);
+    else {
+      state.relations.push(r);
+      state.settings.expanded.push(r.id);
+    }
     save();
     render();
     closeDialog($('#dlg-rel'));
@@ -1113,6 +1141,7 @@
     closeDialog($('#dlg-rel'));
     if (await confirmAction(`Retirer ${r.name} de tes proches ?`, 'Retirer')) {
       state.relations = state.relations.filter((x) => x.id !== r.id);
+      state.settings.expanded = state.settings.expanded.filter((x) => x !== r.id);
       if (ui.focus === r.id) ui.focus = null;
       save();
       render();
@@ -1181,6 +1210,7 @@
     if (!btn) return;
     const id = btn.dataset.id;
     switch (btn.dataset.action) {
+      case 'toggle-rel': toggleRel(id); break;
       case 'focus': setFocus(ui.focus === id ? null : id); break;
       case 'unfocus': setFocus(null); break;
       case 'edit-rel': openRel(state.relations.find((r) => r.id === id)); break;

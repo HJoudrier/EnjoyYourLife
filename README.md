@@ -1,1 +1,99 @@
-# EnjoyYourLife
+# Enjoy your life
+
+Une application simple pour voir où vous en êtes de votre vie.
+
+Vous indiquez votre date de naissance, votre sexe et votre métier. L’application estime votre espérance de vie et dessine votre vie entière : **une ligne par année, un carré par semaine**, de la naissance jusqu’à l’âge estimé du décès. Les semaines vécues sont remplies, la semaine en cours est marquée en rouge, celles qui restent sont vides.
+
+Vous pouvez ensuite :
+
+- **ajouter des événements** passés ou à venir (mariage, diplôme, déménagement, voyage, retraite…), ponctuels ou sur une période, qui apparaissent sur la grille ;
+- **ajouter vos proches** (enfants, conjoint, parents, frères et sœurs, grands-parents, amis) et voir, pour chacun :
+  - la part du temps passé ensemble qui est déjà derrière vous ;
+  - le nombre de jours qu’il vous reste à passer ensemble, en années et en jours ;
+  - ces semaines sur la grille, plus ou moins foncées selon la fréquence à laquelle vous vous voyez.
+
+Par exemple, un enfant vit à la maison jusqu’à 18 ans, rentre le week-end pendant ses études, puis passe une fois par mois. À 7 ans, il a déjà vécu un tiers du temps que vous passerez ensemble, alors que seulement 12 % de votre relation s’est écoulée. Avec un parent, à 35 ans, c’est souvent plus de 90 %.
+
+## Utilisation
+
+Aucune installation ni dépendance : ouvrez `index.html` dans un navigateur.
+
+Pour la servir en local :
+
+```sh
+npm start          # puis http://localhost:8000
+```
+
+Au premier lancement, l’application montre un exemple (Camille, infirmière née en 1991). Cliquez sur **Commencer avec ma vie** pour saisir votre profil ; les exemples disparaissent.
+
+Sur la grille, survolez ou touchez une semaine pour voir ses dates et ses événements ; touchez-la une seconde fois pour y ajouter un événement. Au clavier : flèches pour se déplacer, Entrée pour ajouter, Échap pour quitter la vue d’un proche.
+
+### Vos données
+
+Tout reste dans votre navigateur (`localStorage`). Rien n’est envoyé sur Internet. Le bouton **Sauvegarde** permet de télécharger vos données dans un fichier JSON, de les réimporter sur un autre appareil ou de tout effacer.
+
+## Comment c’est calculé
+
+### Espérance de vie
+
+La mortalité suit un modèle de Gompertz-Makeham, μ(x) = A + B·e^(c·x), calibré séparément pour les hommes et les femmes sur les chiffres de l’Insee pour la France en 2025 (provisoires) :
+
+| | à la naissance | à 60 ans |
+|---|---|---|
+| Femmes | 85,9 ans | 27,9 ans |
+| Hommes | 80,3 ans | 23,9 ans |
+
+L’espérance de vie est **conditionnelle à votre âge** : une personne de 70 ans a déjà franchi les risques des âges précédents et vivra en moyenne plus longtemps que l’espérance de vie à la naissance.
+
+Le **métier** est rattaché à sa catégorie socioprofessionnelle (nomenclature Insee). L’écart d’espérance de vie à 35 ans entre cette catégorie et l’ensemble de la population (Insee, 2020-2022) est appliqué au modèle. Par exemple, chez les hommes, les cadres vivent en moyenne 5,3 ans de plus que les ouvriers ; chez les femmes, l’écart est de 3,4 ans. Si le métier n’est pas reconnu, choisissez la catégorie à la main. « Non précisé » pour le sexe fait la moyenne des deux.
+
+Un curseur d’**ajustement personnel** (de −10 à +10 ans) permet de tenir compte de votre santé ou de votre hygiène de vie.
+
+Ce n’est qu’une moyenne statistique, pas une prédiction. Le modèle utilise la mortalité observée aujourd’hui et ne tient pas compte des progrès futurs, qui allongeront probablement la vie des plus jeunes.
+
+Sources :
+
+- [Espérance de vie à divers âges, 1994-2025](https://www.insee.fr/fr/statistiques/2416631), Insee
+- [Bilan démographique 2025](https://www.insee.fr/fr/statistiques/8719824), Insee Première n° 2087
+- [Espérance de vie par catégorie socioprofessionnelle, 2020-2022](https://www.insee.fr/fr/statistiques/8220688), Insee Première n° 2005
+
+### La grille
+
+La semaine *n* de l’année d’âge *a* commence *n* × 7 jours après votre *a*-ième anniversaire. La 52ᵉ semaine dure jusqu’à l’anniversaire suivant, si bien que chaque ligne correspond exactement à une année de votre vie.
+
+### Le temps ensemble
+
+Une relation est découpée en **étapes**. Chaque étape dure jusqu’à un âge (celui de la personne, le vôtre, ou un nombre d’années depuis le début de la relation) et compte un nombre de jours passés ensemble par an : tous les jours (365), tous les week-ends (104), une fois par mois (12), etc. Toutes les étapes sont modifiables.
+
+La relation s’arrête à la première de ces dates : la fin de votre vie estimée, la fin de vie estimée de la personne (si vous indiquez sa date de naissance) ou une date de fin que vous choisissez.
+
+| Lien | Étapes proposées |
+|---|---|
+| Enfant | à la maison jusqu’à ses 18 ans (tous les jours), études jusqu’à 23 ans (week-ends), puis une fois par mois |
+| Conjoint ou conjointe | vie commune, tous les jours |
+| Parent | à la maison jusqu’à vos 18 ans, études jusqu’à 23 ans (week-ends), puis une fois par mois |
+| Frère ou sœur | sous le même toit jusqu’à vos 18 ans, puis tous les deux mois |
+| Grand-parent | deux fois par mois jusqu’à vos 18 ans, puis quelques fois par an |
+| Ami ou amie | deux fois par mois |
+
+## Structure
+
+```
+index.html        la page
+css/style.css     la mise en forme (thèmes clair et sombre)
+js/life.js        les calculs : dates, espérance de vie, grille, temps ensemble, métiers
+js/app.js         l’interface
+tests/            tests des calculs
+```
+
+## Tests
+
+```sh
+npm test
+```
+
+Les tests (Node 18 ou plus, sans dépendance) vérifient notamment que le modèle retrouve les chiffres de l’Insee, que chaque date tombe dans la bonne semaine de la grille et que le temps passé avec un proche est bien réparti entre ses étapes.
+
+## Licence
+
+GPL-3.0, voir [LICENSE](LICENSE).

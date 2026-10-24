@@ -118,7 +118,7 @@
     const ev = (data) => ({ id: uid(), demo: true, type: 'point', ...data });
     return {
       demo: true,
-      settings: { gridMode: 'life', expanded: [] },
+      settings: { gridMode: 'life', expanded: [], relSort: { by: 'custom', dir: 'desc' } },
       profile: { birth: '1991-04-17', sex: 'F', job: 'Infirmière', category: 'inter', sector: 'sante', adjust: 0 },
       relations: [
         rel('child', { name: 'Léa', start: '2019-09-03', otherSex: 'F', color: COLORS[4] }),
@@ -141,6 +141,13 @@
   const isCategory = (v) => L.CATEGORIES.some((c) => c.id === v);
   const isSector = (v) => L.SECTORS.some((s) => s.id === v);
   const text = (v, max) => String(v == null ? '' : v).trim().slice(0, max);
+
+  // Valeurs selon lesquelles on peut trier les proches.
+  const SORT_KEYS = {
+    share: (tl) => (tl.status === 'future' ? 0 : tl.status === 'ended' ? 1 : tl.share),
+    calendar: (tl) => tl.calendarShare,
+    days: (tl) => tl.futureDays,
+  };
 
   // Remet d'aplomb un état lu dans le navigateur ou dans une sauvegarde.
   function cleanState(raw) {
@@ -201,6 +208,11 @@
       gridMode: L.GRID_MODES[saved.gridMode] ? saved.gridMode : 'life',
       // Proches dont la vignette est dépliée.
       expanded: Array.isArray(saved.expanded) ? saved.expanded.filter((id) => relations.some((r) => r.id === id)) : [],
+      // Ordre des vignettes : personnalisé (celui de la liste) ou trié.
+      relSort: {
+        by: saved.relSort && (saved.relSort.by === 'custom' || SORT_KEYS[saved.relSort.by]) ? saved.relSort.by : 'custom',
+        dir: saved.relSort && saved.relSort.dir === 'asc' ? 'asc' : 'desc',
+      },
     };
     return { demo: !!raw.demo, settings, profile, relations, events };
   }
@@ -502,7 +514,14 @@
       return;
     }
     const { now } = view;
-    box.innerHTML = state.relations.map((rel) => {
+    const sort = state.settings.relSort;
+    const custom = sort.by === 'custom';
+    $('#rel-sort').hidden = state.relations.length < 2;
+    $('#rel-sort-by').value = sort.by;
+    $('#rel-sort-dir').hidden = custom;
+    document.querySelectorAll('input[name="rel-sort-dir"]').forEach((r) => { r.checked = r.value === sort.dir; });
+    const list = orderedRelations();
+    box.innerHTML = list.map((rel, index) => {
       const tl = view.timelines.get(rel.id);
       const type = L.RELATION_TYPES[rel.kind];
       let ageInfo = '';
@@ -515,6 +534,17 @@
       const open = state.settings.expanded.includes(rel.id);
       const domId = 'rel-' + String(rel.id).replace(/[^a-zA-Z0-9_-]/g, '');
       const percent = tl.status === 'future' ? 0 : tl.status === 'ended' ? 100 : Math.round(tl.share * 100);
+      // Réduite, la vignette montre aussi la valeur du tri quand ce n'est pas la part du temps vécu.
+      const sortValue = sort.by === 'days'
+        ? `<span class="rel-key" title="Jours restants ensemble"${open ? ' hidden' : ''}>${nf.format(Math.round(tl.futureDays))} j<span class="visually-hidden"> restants ensemble</span></span>`
+        : sort.by === 'calendar'
+          ? `<span class="rel-key" title="Part de la relation écoulée"${open ? ' hidden' : ''}>${pct.format(tl.calendarShare)} écoulé<span class="visually-hidden"> de la relation</span></span>`
+          : '';
+      const move = custom && list.length > 1 ? `
+            <span class="rel-move">
+              <button type="button" class="move-btn" data-action="move-rel" data-dir="-1" data-id="${esc(rel.id)}" aria-label="Monter ${esc(rel.name)}"${index === 0 ? ' disabled' : ''}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3M4 7l4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button type="button" class="move-btn" data-action="move-rel" data-dir="1" data-id="${esc(rel.id)}" aria-label="Descendre ${esc(rel.name)}"${index === list.length - 1 ? ' disabled' : ''}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M4 9l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </span>` : '';
       let share, left;
       if (tl.status === 'future') {
         share = `<span class="big">0<small>%</small></span><p>Cette relation commence en ${dfMonth.format(tl.start)}. Tout le temps ensemble est devant vous.</p>`;
@@ -553,14 +583,17 @@
 
       return `
         <article class="rel${open ? '' : ' is-compact'}${ui.focus === rel.id ? ' is-focus' : ''}" style="--c:${rel.color}">
+          <div class="rel-top">
           <h3 class="rel-title">
             <button type="button" class="rel-toggle" data-action="toggle-rel" data-id="${esc(rel.id)}" aria-expanded="${open}" aria-controls="${domId}-share ${domId}-more">
               <span class="dot"></span>
               <span class="rel-id"><span class="rel-name">${esc(rel.name)}</span> <span class="rel-kind">${esc(type.label)}${ageInfo}${rel.job ? ` · ${esc(rel.job)}` : ''}</span></span>
+              ${sortValue}
               <span class="rel-mini"${open ? ' hidden' : ''}>${percent}<small>%</small><span class="visually-hidden"> du temps ensemble déjà vécu</span></span>
               <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
-          </h3>
+          </h3>${move}
+          </div>
           <div class="rel-share" id="${domId}-share"${open ? '' : ' hidden'}>${share}</div>
           <div class="rel-bar" aria-hidden="true">${seg.join('')}</div>
           <div class="rel-more" id="${domId}-more"${open ? '' : ' hidden'}>
@@ -679,6 +712,42 @@
     save();
     render();
     if (date != null) select(view.cells.scheme.weekOf(view.life.birth, date).index);
+  }));
+
+  function orderedRelations() {
+    const { by, dir } = state.settings.relSort;
+    const key = SORT_KEYS[by];
+    if (!key) return state.relations;
+    const sign = dir === 'asc' ? 1 : -1;
+    // Tri stable : à valeur égale, l'ordre personnalisé est conservé.
+    return [...state.relations].sort((a, b) => sign * (key(view.timelines.get(a.id)) - key(view.timelines.get(b.id))));
+  }
+
+  // Monte ou descend un proche dans l'ordre personnalisé, en gardant le focus sur la flèche.
+  function moveRel(id, delta) {
+    const list = state.relations;
+    const i = list.findIndex((r) => r.id === id);
+    const j = i + delta;
+    if (i < 0 || j < 0 || j >= list.length) return;
+    [list[i], list[j]] = [list[j], list[i]];
+    save();
+    renderRelations();
+    const buttons = [...document.querySelectorAll('[data-action="move-rel"]')].filter((b) => b.dataset.id === id);
+    const target = buttons.find((b) => Number(b.dataset.dir) === delta && !b.disabled) || buttons.find((b) => !b.disabled);
+    if (target) target.focus();
+    $('#rel-live').textContent = `${list[j].name} est maintenant en position ${j + 1} sur ${list.length}.`;
+  }
+
+  $('#rel-sort-by').addEventListener('change', (e) => {
+    state.settings.relSort.by = e.target.value;
+    save();
+    renderRelations();
+  });
+  document.querySelectorAll('input[name="rel-sort-dir"]').forEach((input) => input.addEventListener('change', () => {
+    if (!input.checked) return;
+    state.settings.relSort.dir = input.value;
+    save();
+    renderRelations();
   }));
 
   // Déplie ou réduit la vignette d'un proche, en gardant le focus clavier sur son bouton.
@@ -1211,6 +1280,7 @@
     const id = btn.dataset.id;
     switch (btn.dataset.action) {
       case 'toggle-rel': toggleRel(id); break;
+      case 'move-rel': moveRel(id, Number(btn.dataset.dir)); break;
       case 'focus': setFocus(ui.focus === id ? null : id); break;
       case 'unfocus': setFocus(null); break;
       case 'edit-rel': openRel(state.relations.find((r) => r.id === id)); break;

@@ -67,7 +67,21 @@
           <h2 id="people-title">Le temps qu’il reste ensemble</h2>
           <button type="button" class="btn btn-small" id="btn-add-rel">Ajouter un proche</button>
         </div>
+        <div class="rel-sort" id="rel-sort" hidden>
+          <label for="rel-sort-by">Trier par</label>
+          <select id="rel-sort-by">
+            <option value="custom">Ordre personnalisé</option>
+            <option value="share">Part du temps ensemble déjà vécue</option>
+            <option value="calendar">Part de la relation écoulée</option>
+            <option value="days">Jours restants ensemble</option>
+          </select>
+          <span class="segmented" id="rel-sort-dir" role="radiogroup" aria-label="Sens du tri">
+            <label><input type="radio" name="rel-sort-dir" value="desc" id="rsd-desc" checked><span>Décroissant</span></label>
+            <label><input type="radio" name="rel-sort-dir" value="asc" id="rsd-asc"><span>Croissant</span></label>
+          </span>
+        </div>
         <div id="relations" class="relations"></div>
+        <p class="visually-hidden" id="rel-live" aria-live="polite"></p>
       </section>
 
       <section class="panel" aria-labelledby="events-title">

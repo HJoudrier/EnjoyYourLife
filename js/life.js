@@ -740,6 +740,7 @@
     DAY,
     YEAR,
     WEEKS,
+    MORTALITY,
     CATEGORIES,
     SECTORS,
     E35,

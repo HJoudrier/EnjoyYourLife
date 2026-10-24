@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Documentation · Enjoy your life</title>
+  <meta name="description" content="Sources des données et méthodes de calcul d'Enjoy your life : espérance de vie, années en bonne santé, chances d'atteindre chaque âge et temps passé avec ses proches.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;600&family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,600;0,700;1,400&family=Playwrite+FR+Moderne:wght@300;400&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="index.html">
+      <span class="logo">Enjoy your life</span>
+      <span class="tagline">Documentation</span>
+    </a>
+    <nav class="top-actions" aria-label="Navigation">
+      <a class="btn" href="index.html">Retour à l’application</a>
+    </nav>
+  </header>
+
+  <main class="doc">
+    <div class="doc-hero">
+      <h1>D’où viennent les chiffres</h1>
+      <p>Enjoy your life estime la durée de votre vie, vos années en bonne santé et le temps qu’il vous reste avec vos proches à partir de statistiques publiques françaises. Cette page explique chaque donnée, comment elle est calculée et d’où elle vient.</p>
+      <p>Toutes ces valeurs sont des moyennes. Elles décrivent ce qui arrive en moyenne à des personnes du même âge, du même sexe et du même métier que vous, et non ce qui vous arrivera.</p>
+    </div>
+
+    <nav class="toc" aria-label="Sommaire">
+      <ol>
+        <li><a href="#resume">Les chiffres du résumé</a></li>
+        <li><a href="#esperance">L’espérance de vie</a></li>
+        <li><a href="#metier">Le métier</a></li>
+        <li><a href="#secteur">Le secteur d’activité</a></li>
+        <li><a href="#sante">Les années en bonne santé</a></li>
+        <li><a href="#chances">Les chances d’atteindre un âge</a></li>
+        <li><a href="#grille">La grille des semaines</a></li>
+        <li><a href="#proches">Le temps avec vos proches</a></li>
+        <li><a href="#donnees">Vos données</a></li>
+        <li><a href="#limites">Limites</a></li>
+        <li><a href="#sources">Sources</a></li>
+      </ol>
+    </nav>
+
+    <div class="doc-body">
+      <section id="resume" aria-labelledby="h-resume">
+        <h2 id="h-resume">Les chiffres du résumé</h2>
+        <dl>
+          <div><dt>Semaines vécues et semaines restantes</dt><dd>Une année de vie compte 52 semaines, de votre anniversaire au suivant. Les semaines restantes vont jusqu’à la semaine de votre espérance de vie estimée.</dd></div>
+          <div><dt>Espérance de vie</dt><dd>L’âge moyen auquel meurent les personnes qui vous ressemblent et qui sont encore en vie aujourd’hui. Voir <a href="#esperance">l’espérance de vie</a>.</dd></div>
+          <div><dt>Il vous reste</dt><dd>Le temps entre aujourd’hui et cette date, en années et mois, puis en jours.</dd></div>
+          <div><dt>Sans incapacité, sans incapacité forte</dt><dd>Le nombre moyen d’années qu’il vous reste à vivre sans être limité dans vos activités, puis sans être fortement limité. Voir <a href="#sante">les années en bonne santé</a>.</dd></div>
+          <div><dt>Encore … étés et … Noëls</dt><dd>Le nombre de 15 juillet et de 25 décembre entre aujourd’hui et votre espérance de vie.</dd></div>
+          <div><dt>Si votre vie était une journée</dt><dd>La part de votre vie déjà écoulée, ramenée à 24 heures. À 40 % de votre vie, il est 9 h 36.</dd></div>
+        </dl>
+      </section>
+
+      <section id="esperance" aria-labelledby="h-esperance">
+        <h2 id="h-esperance">L’espérance de vie</h2>
+        <p>Le point de départ est la mortalité observée en France en 2025, publiée par l’Insee. L’application la reproduit avec un modèle de Gompertz-Makeham : le risque de mourir dans l’année reste faible et à peu près constant chez les jeunes, puis double tous les six à huit ans environ à partir de l’âge adulte.</p>
+        <p class="formula">μ(x) = A + k(x) × B × e<sup>c·x</sup></p>
+        <p>μ(x) est le risque instantané de décès à l’âge x. A, B et c sont calés séparément pour les femmes et les hommes, pour que le modèle retrouve les espérances de vie publiées par l’Insee à la naissance et à 60 ans. Le facteur k(x) traduit l’effet du métier et du secteur (il vaut 1 pour la moyenne nationale).</p>
+        <div class="table-wrap">
+          <table id="t-mortality">
+            <caption>Insee 2025, chiffres provisoires, comparés au modèle de l’application.</caption>
+            <thead>
+              <tr><th scope="col">Espérance de vie</th><th scope="col" class="num">À la naissance, Insee</th><th scope="col" class="num">Modèle</th><th scope="col" class="num">À 60 ans, Insee</th><th scope="col" class="num">Modèle</th><th scope="col" class="num">À 65 ans, Insee</th><th scope="col" class="num">Modèle</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <table id="t-parameters">
+            <caption>Paramètres du modèle. « Atténuation » règle la baisse de l’effet du métier après 60 ans.</caption>
+            <thead>
+              <tr><th scope="col">Paramètres</th><th scope="col" class="num">A</th><th scope="col" class="num">B</th><th scope="col" class="num">c</th><th scope="col" class="num">Atténuation</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <h3>Une espérance de vie qui dépend de votre âge</h3>
+        <p>L’espérance de vie affichée tient compte du fait que vous êtes en vie aujourd’hui. Une personne de 70 ans a déjà traversé les risques des âges précédents : elle vivra en moyenne jusqu’à un âge plus élevé que l’espérance de vie à la naissance. L’application calcule donc le nombre moyen d’années restant à vivre à partir de votre âge exact, puis l’ajoute à cet âge.</p>
+        <h3>Sexe non précisé</h3>
+        <p>Si vous choisissez « Non précisé », l’application fait la moyenne des calculs pour les femmes et pour les hommes.</p>
+        <h3>Ajustement personnel</h3>
+        <p>Le curseur de votre profil ajoute ou retire jusqu’à 10 ans, pour tenir compte de votre santé ou de votre hygiène de vie si vous le souhaitez. Il ne s’appuie sur aucune statistique : c’est votre propre estimation. Il allonge ou raccourcit dans la même proportion toutes les années à venir, y compris les années en bonne santé et les chances d’atteindre chaque âge.</p>
+      </section>
+
+      <section id="metier" aria-labelledby="h-metier">
+        <h2 id="h-metier">Le métier</h2>
+        <p>Le métier saisi est rattaché à l’une des catégories socioprofessionnelles de l’Insee. Une liste de mots-clés propose la catégorie automatiquement (« infirmière » donne profession intermédiaire, « maçon » donne ouvrier), et vous pouvez toujours la changer. Si vous êtes à la retraite, indiquez votre dernier métier.</p>
+        <p>L’Insee mesure l’espérance de vie à 35 ans de chaque catégorie. L’écart avec l’ensemble de la population est appliqué au modèle, en multipliant le risque de décès par un facteur k calé pour retrouver exactement cet écart.</p>
+        <div class="table-wrap">
+          <table id="t-categories">
+            <caption>Espérance de vie à 35 ans (années restant à vivre), Insee, période 2020-2022.</caption>
+            <thead>
+              <tr><th scope="col">Catégorie</th><th scope="col" class="num">Femmes</th><th scope="col" class="num">Écart</th><th scope="col" class="num">Hommes</th><th scope="col" class="num">Écart</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p>La moyenne de l’ensemble inclut les personnes sans emploi, dont l’espérance de vie est plus faible. C’est pourquoi presque toutes les catégories de travailleurs sont au-dessus de la moyenne.</p>
+        <h3>Un écart qui se réduit avec l’âge</h3>
+        <p>À 35 ans, les cadres ont 5,3 ans d’espérance de vie de plus que les ouvriers chez les hommes, et 3,4 ans chez les femmes. À 60 ans, l’Insee ne mesure plus que 3,6 et 2,3 ans d’écart. Pour reproduire ces deux mesures, l’effet du métier est constant jusqu’à 60 ans puis s’estompe progressivement. C’est surtout important pour les parents et les grands-parents.</p>
+        <p>Les proches peuvent avoir eux aussi un métier et une catégorie : le même calcul sert à estimer leur espérance de vie.</p>
+      </section>
+
+      <section id="secteur" aria-labelledby="h-secteur">
+        <h2 id="h-secteur">Le secteur d’activité</h2>
+        <p>Aucune statistique publiée ne donne l’espérance de vie par secteur d’activité. Santé publique France (programme Cosmop) a en revanche comparé la mortalité des salariés selon leur secteur : elle est plus élevée dans la construction, l’industrie et les transports, plus faible dans l’agriculture, l’enseignement et certains services.</p>
+        <p>L’application suit le sens de ces écarts, mais <strong>les valeurs ci-dessous sont des estimations propres à l’application</strong>, limitées à un an. Elles s’ajoutent à l’écart du métier.</p>
+        <div class="table-wrap">
+          <table id="t-sectors">
+            <caption>Écart indicatif d’espérance de vie à 35 ans selon le secteur.</caption>
+            <thead><tr><th scope="col">Secteur</th><th scope="col" class="num">Écart</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p>Comme pour la catégorie, le métier saisi propose un secteur quand il ne fait guère de doute (« maçon » donne construction, « infirmière » donne santé).</p>
+      </section>
+
+      <section id="sante" aria-labelledby="h-sante">
+        <h2 id="h-sante">Les années en bonne santé</h2>
+        <p>La DREES publie chaque année deux espérances de vie en bonne santé, à partir de l’enquête de l’Insee sur les ressources et les conditions de vie. On y demande : « Êtes-vous limité(e), depuis au moins six mois, à cause d’un problème de santé, dans les activités que les gens font habituellement ? »</p>
+        <dl>
+          <div><dt><i class="sw sw-h1"></i>Espérance de vie sans incapacité</dt><dd>Le nombre moyen d’années vécues sans répondre « oui » à cette question, c’est-à-dire sans aucune limitation.</dd></div>
+          <div><dt><i class="sw sw-h2"></i>Espérance de vie sans incapacité forte</dt><dd>Le nombre moyen d’années vécues sans répondre « oui, fortement limité(e) ». Les limitations légères sont comptées comme des années sans incapacité forte.</dd></div>
+        </dl>
+        <h3>Le calcul</h3>
+        <p>L’application utilise la méthode de Sullivan, celle de la DREES : à chaque âge, la probabilité d’être encore en vie est multipliée par la part de la population sans incapacité à cet âge, puis on additionne.</p>
+        <p class="formula">années sans incapacité à l’âge a = ∫ P(en vie à x) × (1 − π(x)) dx, de a à la fin de vie</p>
+        <p>π(x) est la part de personnes avec une incapacité à l’âge x. Elle suit une courbe qui augmente avec l’âge, calée pour retrouver les chiffres de la DREES à la naissance et à 65 ans.</p>
+        <div class="table-wrap">
+          <table id="t-disability">
+            <caption>Chiffres DREES (année entre parenthèses) comparés au modèle de l’application.</caption>
+            <thead>
+              <tr><th scope="col">Espérance de vie</th><th scope="col" class="num">À la naissance, DREES</th><th scope="col" class="num">Modèle</th><th scope="col" class="num">À 65 ans, DREES</th><th scope="col" class="num">Modèle</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <table id="t-prevalence">
+            <caption>Part de la population avec une incapacité selon l’âge, dans le modèle.</caption>
+            <thead>
+              <tr><th scope="col">Part avec une incapacité</th><th scope="col" class="num">20 ans</th><th scope="col" class="num">40 ans</th><th scope="col" class="num">60 ans</th><th scope="col" class="num">75 ans</th><th scope="col" class="num">90 ans</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <h3>Ce que montre l’application</h3>
+        <p>Le résumé et la grille présentent ces moyennes comme des périodes : d’abord les années sans incapacité, puis celles avec une incapacité, dont les dernières avec une incapacité forte. C’est une façon de lire une moyenne. En réalité, une incapacité peut survenir plus tôt ou plus tard, et parfois disparaître.</p>
+        <p>Comme l’espérance de vie, ces durées tiennent compte de votre âge, de votre sexe, de votre métier, de votre secteur et de l’ajustement personnel. Le métier n’agit qu’à travers la durée de vie : la part de personnes avec une incapacité à chaque âge est la même pour tous. Les écarts réels entre catégories sont probablement plus grands.</p>
+      </section>
+
+      <section id="chances" aria-labelledby="h-chances">
+        <h2 id="h-chances">Les chances d’atteindre un âge</h2>
+        <p>À droite de chaque ligne de la grille, un pourcentage donne vos chances d’être encore en vie au début de cette ligne : à votre anniversaire, ou au 1er janvier si la grille suit les années civiles.</p>
+        <p>Il se calcule en enchaînant les risques de décès de chaque tranche d’âge. Vos chances d’atteindre 80 ans sont vos chances de passer l’année qui vient, multipliées par celles de passer l’année suivante, et ainsi de suite jusqu’à 80 ans.</p>
+        <p class="formula">P(atteindre l’âge A) = (1 − q<sub>a</sub>) × (1 − q<sub>a+1</sub>) × … × (1 − q<sub>A−1</sub>)</p>
+        <p>q<sub>x</sub> est le risque de mourir entre l’âge x et l’âge x + 1. L’application le calcule par tranches de 0,02 an (environ une semaine) avec le même modèle que l’espérance de vie. La somme de ces chances redonne donc les années qu’il vous reste. En survolant une semaine à venir, vous voyez vos chances d’être en vie et le risque de décès dans l’année à cet âge.</p>
+        <div class="table-wrap">
+          <table id="t-chances">
+            <caption>Exemple : chances d’atteindre chaque âge pour une personne qui a 35 ans aujourd’hui (moyenne nationale).</caption>
+            <thead>
+              <tr><th scope="col">Atteindre</th><th scope="col" class="num">50 ans</th><th scope="col" class="num">60 ans</th><th scope="col" class="num">70 ans</th><th scope="col" class="num">80 ans</th><th scope="col" class="num">90 ans</th><th scope="col" class="num">100 ans</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <table id="t-risk">
+            <caption>Risque de mourir dans l’année selon l’âge, pour la même personne.</caption>
+            <thead>
+              <tr><th scope="col">Risque à</th><th scope="col" class="num">40 ans</th><th scope="col" class="num">50 ans</th><th scope="col" class="num">60 ans</th><th scope="col" class="num">70 ans</th><th scope="col" class="num">80 ans</th><th scope="col" class="num">90 ans</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p>L’espérance de vie est une moyenne, pas l’âge où l’on a une chance sur deux d’être en vie : celui-ci est un peu plus élevé. La grille continue donc au-delà de l’espérance de vie, en carrés pâles, jusqu’à l’âge que vous avez moins d’une chance sur dix d’atteindre. Sur mobile, seuls les pourcentages des lignes multiples de 5 sont affichés.</p>
+      </section>
+
+      <section id="grille" aria-labelledby="h-grille">
+        <h2 id="h-grille">La grille des semaines</h2>
+        <p>Chaque ligne est une année, chaque carré une semaine, et toutes les lignes ont la même taille. Un réglage au-dessus de la grille choisit l’alignement :</p>
+        <dl>
+          <div><dt>Vos années de vie</dt><dd>Une ligne va d’un anniversaire au suivant. La semaine n commence n × 7 jours après l’anniversaire, et la 52<sup>e</sup> dure jusqu’à l’anniversaire suivant. La marge indique votre âge.</dd></div>
+          <div><dt>Les années civiles</dt><dd>Une ligne va du 1er janvier au 31 décembre. La semaine n commence n × 7 jours après le 1er janvier, et la 52<sup>e</sup> dure jusqu’au 31 décembre. La première ligne commence à votre semaine de naissance. La marge indique l’année et l’en-tête les mois.</dd></div>
+        </dl>
+        <h3>Les couleurs</h3>
+        <dl>
+          <div><dt><i class="sw sw-past"></i>Vécue</dt><dd>Les semaines déjà passées.</dd></div>
+          <div><dt><i class="sw sw-now"></i>Cette semaine</dt><dd>La semaine en cours.</dd></div>
+          <div><dt><i class="sw sw-future"></i>À venir</dt><dd>Les semaines qui restent, en moyenne sans incapacité.</dd></div>
+          <div><dt><i class="sw sw-h1"></i>Avec incapacité</dt><dd>Les semaines vécues en moyenne avec une incapacité.</dd></div>
+          <div><dt><i class="sw sw-h2"></i>Avec incapacité forte</dt><dd>Les semaines vécues en moyenne avec une incapacité forte.</dd></div>
+          <div><dt><i class="sw sw-beyond"></i>Au-delà de l’espérance de vie</dt><dd>Les semaines après votre espérance de vie, que vous avez encore des chances de vivre.</dd></div>
+        </dl>
+        <p>Les événements ponctuels apparaissent comme des carrés entourés de leur couleur, les périodes comme une suite de carrés colorés, plus pâles quand elles sont à venir.</p>
+      </section>
+
+      <section id="proches" aria-labelledby="h-proches">
+        <h2 id="h-proches">Le temps avec vos proches</h2>
+        <p>Une relation est découpée en étapes. Chaque étape dure jusqu’à un âge et compte un nombre de jours passés ensemble par an. L’âge peut être celui de la personne (pour un enfant), le vôtre (pour un parent) ou le nombre d’années depuis le début de la relation (pour un conjoint ou un ami).</p>
+        <div class="table-wrap">
+          <table id="t-relations">
+            <caption>Étapes proposées selon le lien. Toutes sont modifiables.</caption>
+            <thead><tr><th scope="col">Lien</th><th scope="col">Âges comptés selon</th><th scope="col">Étapes</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <table id="t-frequencies">
+            <caption>Rythmes proposés. « Autre rythme » permet de saisir un nombre de jours.</caption>
+            <thead><tr><th scope="col">Rythme</th><th scope="col" class="num">Jours ensemble par an</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <h3>La fin de la relation</h3>
+        <p>La relation s’arrête à la première de ces dates : la fin de votre vie estimée, la fin de vie estimée de la personne, calculée avec sa date de naissance, son sexe, son métier et son secteur, ou une date de fin que vous choisissez.</p>
+        <h3>Les chiffres affichés</h3>
+        <dl>
+          <div><dt>Part du temps ensemble déjà derrière vous</dt><dd>Les jours déjà passés ensemble, divisés par tous les jours que vous passerez ensemble. Comme on se voit beaucoup plus pendant l’enfance, cette part est souvent bien plus élevée que la part de la relation écoulée.</dd></div>
+          <div><dt>Part de la relation écoulée</dt><dd>Le temps écoulé depuis le début de la relation, divisé par sa durée totale, sans tenir compte du rythme.</dd></div>
+          <div><dt>Jours restant ensemble</dt><dd>La somme, sur les étapes à venir, de la durée de chaque étape multipliée par son nombre de jours ensemble par an. Elle est aussi donnée en années et jours cumulés : 3 960 jours font 10 ans et 310 jours.</dd></div>
+        </dl>
+      </section>
+
+      <section id="donnees" aria-labelledby="h-donnees">
+        <h2 id="h-donnees">Vos données</h2>
+        <p>Votre profil, vos proches et vos événements sont enregistrés uniquement dans votre navigateur. Rien n’est envoyé sur Internet. Le bouton « Sauvegarde » permet de les télécharger dans un fichier, de les réimporter sur un autre appareil ou de tout effacer. Si vous videz les données de votre navigateur sans sauvegarde, elles sont perdues.</p>
+      </section>
+
+      <section id="limites" aria-labelledby="h-limites">
+        <h2 id="h-limites">Limites</h2>
+        <ul>
+          <li>Les calculs utilisent la mortalité observée aujourd’hui. Ils ne tiennent pas compte des progrès futurs de la médecine et des conditions de vie, qui allongeront probablement la vie des plus jeunes.</li>
+          <li>Le modèle est calé sur les moyennes nationales à la naissance et à 60 ans. Aux très grands âges (95 ans et plus), les chances de survie sont approximatives.</li>
+          <li>Les écarts par secteur d’activité sont des estimations de l’application, pas des statistiques publiées.</li>
+          <li>Le rattachement d’un métier à sa catégorie et à son secteur se fait par mots-clés et peut se tromper : vérifiez la catégorie proposée.</li>
+          <li>Les années en bonne santé sont des moyennes présentées comme des périodes ; la santé de chacun suit un chemin qui lui est propre.</li>
+          <li>Les données Insee par catégorie portent sur 2020-2022, une période marquée par l’épidémie de Covid-19.</li>
+        </ul>
+      </section>
+
+      <section id="sources" aria-labelledby="h-sources">
+        <h2 id="h-sources">Sources</h2>
+        <h3>Espérance de vie</h3>
+        <ul class="sources">
+          <li><a href="https://www.insee.fr/fr/statistiques/8719824">Bilan démographique 2025</a>, Insee Première n° 2087, janvier 2026 : espérance de vie à la naissance (85,9 ans pour les femmes, 80,3 ans pour les hommes).</li>
+          <li><a href="https://www.insee.fr/fr/statistiques/2416631">Espérance de vie à divers âges, données annuelles 1994-2025</a>, Insee : espérance de vie à 60 et 65 ans.</li>
+        </ul>
+        <h3>Métier</h3>
+        <ul class="sources">
+          <li><a href="https://www.insee.fr/fr/statistiques/8220688">Espérance de vie par catégorie socioprofessionnelle, 2020-2022</a>, Insee Première n° 2005, 2024.</li>
+          <li><a href="https://www.insee.fr/fr/statistiques/2383438">Espérance de vie à 35 ans par catégorie socioprofessionnelle et diplôme, 1976-1984 à 2020-2022</a>, Insee.</li>
+          <li><a href="https://www.cor-retraites.fr/sites/default/files/2025-02/1.%20Insee_cor_esperance%20de%20vie_avec%20annexe.pdf">L’espérance de vie par niveau de vie et catégorie sociale</a>, Insee pour le Conseil d’orientation des retraites, 2025 : écarts entre cadres et ouvriers à 60 ans.</li>
+        </ul>
+        <h3>Secteur d’activité</h3>
+        <ul class="sources">
+          <li><a href="https://www.santepubliquefrance.fr/docs/article/cosmop-analyse-de-la-mortalite-par-secteurs-dactivite-economique">Cosmop : analyse de la mortalité par secteurs d’activité économique</a>, Santé publique France, Bulletin épidémiologique hebdomadaire, 2006.</li>
+          <li><a href="https://www.santepubliquefrance.fr/docs/article/analyse-de-la-mortalite-prematuree-dans-le-secteur-de-la-construction">Analyse de la mortalité prématurée dans le secteur de la construction</a>, Santé publique France.</li>
+        </ul>
+        <h3>Années en bonne santé</h3>
+        <ul class="sources">
+          <li><a href="https://drees.solidarites-sante.gouv.fr/sites/default/files/2026-01/ER1363_esperance_de_vie_sans_incapacit%C3%A9_0.pdf">L’espérance de vie sans incapacité à 65 ans est de 11,8 ans pour les femmes et de 10,5 ans pour les hommes en 2024</a>, DREES, Études et Résultats n° 1363, janvier 2026.</li>
+          <li><a href="https://drees.solidarites-sante.gouv.fr/sites/default/files/2024-12/ER1323M.pdf">Espérance de vie sans incapacité en 2023</a>, DREES, Études et Résultats n° 1323, décembre 2024 : espérance de vie sans incapacité forte à la naissance.</li>
+        </ul>
+        <h3>L’idée</h3>
+        <ul class="sources">
+          <li><a href="https://waitbutwhy.com/2014/05/life-weeks.html">Your Life in Weeks</a>, Tim Urban, Wait But Why, 2014 : la vie en carrés de semaines.</li>
+          <li><a href="https://waitbutwhy.com/2015/12/the-tail-end.html">The Tail End</a>, Tim Urban, Wait But Why, 2015 : le temps qu’il reste avec ses proches.</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <p class="credit">Application réalisée par <a href="mailto:hugo.joudrier@gmail.com">Hugo Joudrier-Faure</a></p>
+  </footer>
+
+  <script src="js/life.js"></script>
+  <script src="js/doc.js"></script>
+</body>
+</html>

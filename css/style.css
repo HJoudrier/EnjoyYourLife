@@ -103,6 +103,7 @@ b, strong { font-weight: 700; }
   gap: 12px 20px;
 }
 .brand { display: grid; gap: 2px; }
+a.brand { text-decoration: none; color: inherit; }
 .logo {
   font-family: var(--font-display);
   font-size: 1.45rem;
@@ -511,7 +512,53 @@ b, strong { font-weight: 700; }
   font-size: 0.8rem;
   color: var(--ink-soft);
 }
+.foot { display: grid; gap: 8px; }
 .foot p { max-width: 80ch; }
+.foot a { color: var(--ink); text-underline-offset: 3px; text-decoration-color: var(--rule-strong); }
+.foot a:hover { text-decoration-color: var(--ink); }
+.credit { padding-top: 10px; border-top: 1px solid var(--rule); }
+
+/* ---------- Documentation ---------- */
+
+.doc { max-width: 780px; margin: 0 auto; display: grid; gap: 40px; }
+.doc-hero { display: grid; gap: 10px; padding-top: 8px; }
+.doc-hero h1 { font-size: clamp(1.6rem, 1.15rem + 1.6vw, 2.3rem); font-weight: 700; }
+.doc-hero p { color: var(--ink-soft); max-width: 62ch; font-size: 1.05rem; }
+.toc { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding-block: 14px; }
+.toc ol { list-style: none; margin: 0; padding: 0; columns: 2 16rem; column-gap: 32px; }
+.toc li { padding: 3px 0; break-inside: avoid; }
+.toc a, .doc-body a { color: var(--ink); text-underline-offset: 3px; text-decoration-color: var(--rule-strong); }
+.toc a:hover, .doc-body a:hover { text-decoration-color: var(--ink); }
+.doc-body { display: grid; gap: 44px; }
+.doc-body section { display: grid; gap: 14px; scroll-margin-top: 16px; min-width: 0; }
+.doc-body h2 { font-size: 1.4rem; }
+.doc-body h3 { font-size: 1.05rem; margin-top: 10px; }
+.doc-body p, .doc-body li { max-width: 68ch; line-height: 1.65; }
+.doc-body ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.doc-body dl { margin: 0; display: grid; gap: 12px; }
+.doc-body dt { font-weight: 700; }
+.doc-body dd { margin: 2px 0 0; max-width: 68ch; line-height: 1.6; color: var(--ink-soft); }
+.doc-body .sw { vertical-align: -1px; margin-right: 6px; }
+.formula {
+  font-family: var(--font-data);
+  font-size: 0.92rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.note { font-size: 0.9rem; color: var(--ink-soft); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--surface); }
+.doc-body table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.doc-body caption { text-align: left; padding: 10px 12px 0; font-size: 0.8rem; color: var(--ink-soft); caption-side: bottom; padding-bottom: 10px; }
+.doc-body th, .doc-body td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.doc-body thead th { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); font-weight: 600; }
+.doc-body .num { text-align: right; font-family: var(--font-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.doc-body tbody tr:last-child th, .doc-body tbody tr:last-child td { border-bottom: none; }
+.doc-body th .note { font-weight: 400; }
+.sources li { overflow-wrap: anywhere; }
 
 /* ---------- Fenêtres ---------- */
 

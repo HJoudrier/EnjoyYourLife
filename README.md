@@ -38,6 +38,8 @@ Tout reste dans votre navigateur (`localStorage`). Rien n’est envoyé sur Inte
 
 ## Comment c’est calculé
 
+La page [documentation.html](documentation.html), accessible depuis l’en-tête et le bas de l’application, détaille chaque donnée, sa source et son calcul, avec des tableaux tirés directement du moteur de calcul. En résumé :
+
 ### Espérance de vie
 
 La mortalité suit un modèle de Gompertz-Makeham, μ(x) = A + B·e^(c·x), calibré séparément pour les hommes et les femmes sur les chiffres de l’Insee pour la France en 2025 (provisoires) :
@@ -125,11 +127,13 @@ La relation s’arrête à la première de ces dates : la fin de votre vie estim
 ## Structure
 
 ```
-index.html        la page
-css/style.css     la mise en forme (thèmes clair et sombre)
-js/life.js        les calculs : dates, espérance de vie (dont sans incapacité), chances de survie, grille, temps ensemble, métiers et secteurs
-js/app.js         l’interface
-tests/            tests des calculs
+index.html          la page
+documentation.html  les sources des données et les méthodes de calcul
+css/style.css       la mise en forme (thèmes clair et sombre)
+js/life.js          les calculs : dates, espérance de vie (dont sans incapacité), chances de survie, grille, temps ensemble, métiers et secteurs
+js/app.js           l’interface
+js/doc.js           les tableaux de la documentation, calculés avec life.js
+tests/              tests des calculs
 ```
 
 ## Tests

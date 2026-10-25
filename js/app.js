@@ -1345,6 +1345,28 @@
     }
   });
 
+  // Installation comme une application : Chrome annonce qu'elle est possible,
+  // on affiche alors le bouton « Installer l'application ».
+  let installPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installPrompt = e;
+    $('#btn-install').hidden = false;
+  });
+  $('#btn-install').addEventListener('click', async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    installPrompt = null;
+    $('#btn-install').hidden = true;
+  });
+  window.addEventListener('appinstalled', () => { $('#btn-install').hidden = true; });
+
+  // Fonctionnement hors connexion (seulement quand le site est servi en http ou https).
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* navigateur ou hébergement sans service worker */ });
+  }
+
   // Passé minuit, la semaine en cours peut changer : on redessine au retour sur la page.
   let renderedDay = L.today();
   document.addEventListener('visibilitychange', () => {

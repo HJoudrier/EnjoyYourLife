@@ -34,6 +34,24 @@ Au premier lancement, l’application montre un exemple (Camille, infirmière n�
 
 Les proches apparaissent en vignettes réduites, avec la part du temps ensemble déjà vécue et sa barre ; touche une vignette pour afficher le détail, puis à nouveau pour la réduire. Tu peux les ranger dans ton ordre (flèches pour monter ou descendre) ou les trier par part du temps déjà vécue, part de la relation écoulée ou jours restants, en ordre croissant ou décroissant. Sur la grille, choisis d’aligner les lignes sur tes anniversaires ou sur les 1er janvier. Survole ou touche une semaine pour voir ses dates et ses événements ; touche-la une seconde fois pour y ajouter un événement. Au clavier : flèches pour se déplacer, Entrée pour ajouter, Échap pour quitter la vue d’un proche.
 
+### L’installer comme une application
+
+Une fois le site en ligne en HTTPS (voir plus bas), Chrome peut l’installer comme une vraie application : une icône dans le lanceur, une ouverture en plein écran sans barre d’adresse, et un fonctionnement hors connexion.
+
+- **Android, avec Chrome** : ouvre le site, puis touche le bouton **Installer l’application** en haut de la page, ou le menu ⋮ puis **Installer l’application** (ou **Ajouter à l’écran d’accueil**, puis **Installer**).
+- **Ordinateur, avec Chrome ou Edge** : le bouton **Installer l’application**, ou l’icône d’installation à droite de la barre d’adresse.
+- **iPhone, avec Safari** : bouton Partager, puis **Sur l’écran d’accueil**.
+
+Les données restent dans le navigateur du téléphone. Elles ne sont pas partagées avec une autre adresse du site : pour les transférer, utilise **Sauvegarde**.
+
+### Mettre le site en ligne avec GitHub Pages
+
+1. Sur GitHub, dans le dépôt : **Settings**, puis **Pages**.
+2. Dans **Build and deployment**, choisis **Deploy from a branch**, puis la branche (par exemple `main`) et le dossier **/ (root)**, et enregistre.
+3. Au bout d’une minute environ, le site est en ligne à l’adresse `https://<compte>.github.io/<dépôt>/`.
+
+Le fichier `manifest.webmanifest` décrit l’application (nom, icônes, plein écran) et `sw.js` la garde en cache pour qu’elle fonctionne hors connexion. Quand le site change, l’application prend la nouvelle version à la prochaine ouverture avec du réseau.
+
 ### Tes données
 
 Tout reste dans ton navigateur (`localStorage`). Rien n’est envoyé sur Internet. Le bouton **Sauvegarde** permet de télécharger tes données dans un fichier JSON, de les réimporter sur un autre appareil ou de tout effacer.
@@ -149,6 +167,8 @@ js/causes.js        les principales causes de décès par âge et par sexe (fich
 js/doc.js           les tableaux de la documentation, calculés avec life.js
 scripts/            mise à jour des données de causes de décès depuis Eurostat
 img/                le logo (SVG) et ses versions en image
+manifest.webmanifest  la description de l’application installable
+sw.js               le fonctionnement hors connexion
 tests/              tests des calculs
 ```
 
@@ -162,7 +182,7 @@ Les tests (Node 18 ou plus, sans dépendance) vérifient notamment que le modèl
 
 ## Logo
 
-Le logo est une page de cahier : la marge rouge, puis une grille de semaines. Les quatre premiers carrés sont pleins (le temps vécu), celui du centre est rouge (aujourd’hui) et les quatre derniers sont vides (le reste de ta vie). `img/logo.svg` sert d’icône d’onglet ; `img/apple-touch-icon.png` d’icône d’écran d’accueil ; `img/logo-512.png` et `img/logo-complet.png` aux partages.
+Le logo est une page de cahier : la marge rouge, puis une grille de semaines. Les quatre premiers carrés sont pleins (le temps vécu), celui du centre est rouge (aujourd’hui) et les quatre derniers sont vides (le reste de ta vie). `img/logo.svg` sert d’icône d’onglet ; `img/icon-192.png`, `img/icon-512.png` et `img/icon-maskable-512.png` d’icônes d’application (la version « masquable » s’adapte aux formes des lanceurs Android) ; `img/apple-touch-icon.png` d’icône d’écran d’accueil sur iPhone ; `img/logo-complet.png` aux partages.
 
 ## Licence
 

@@ -102,7 +102,9 @@ b, strong { font-weight: 700; }
   justify-content: space-between;
   gap: 12px 20px;
 }
-.brand { display: grid; gap: 2px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-text { display: grid; gap: 2px; min-width: 0; }
+.mark { flex: none; width: 44px; height: 44px; border-radius: 10px; box-shadow: 0 0 0 1px var(--rule); }
 a.brand { text-decoration: none; color: inherit; }
 .logo {
   font-family: var(--font-display);

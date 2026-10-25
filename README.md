@@ -1,5 +1,7 @@
 # Le reste de ta vie
 
+<p align="center"><img src="img/logo-complet.png" alt="Le reste de ta vie — aujourd’hui en est le premier jour" width="600"></p>
+
 Une application simple pour voir où tu en es de ta vie. Aujourd’hui en est le premier jour.
 
 Tu indiques ta date de naissance, ton sexe et ton métier. L’application estime ton espérance de vie et dessine ta vie entière : **une ligne par année, un carré par semaine**, de la naissance jusqu’à l’âge estimé du décès. Les semaines vécues sont remplies, la semaine en cours est marquée en rouge, celles qui restent sont vides.
@@ -146,6 +148,7 @@ js/app.js           l’interface
 js/causes.js        les principales causes de décès par âge et par sexe (fichier généré)
 js/doc.js           les tableaux de la documentation, calculés avec life.js
 scripts/            mise à jour des données de causes de décès depuis Eurostat
+img/                le logo (SVG) et ses versions en image
 tests/              tests des calculs
 ```
 
@@ -156,6 +159,10 @@ npm test
 ```
 
 Les tests (Node 18 ou plus, sans dépendance) vérifient notamment que le modèle retrouve les chiffres de l’Insee (y compris les écarts par catégorie à 35 et 60 ans) et de la DREES, que la somme des chances de survie redonne l’espérance de vie, que chaque date tombe dans la bonne semaine de la grille, que le métier et le secteur d’un proche changent bien la durée de la relation et que le temps passé ensemble est bien réparti entre les étapes.
+
+## Logo
+
+Le logo est une page de cahier : la marge rouge, puis une grille de semaines. Les quatre premiers carrés sont pleins (le temps vécu), celui du centre est rouge (aujourd’hui) et les quatre derniers sont vides (le reste de ta vie). `img/logo.svg` sert d’icône d’onglet ; `img/apple-touch-icon.png` d’icône d’écran d’accueil ; `img/logo-512.png` et `img/logo-complet.png` aux partages.
 
 ## Licence
 

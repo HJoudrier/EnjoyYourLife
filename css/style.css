@@ -589,7 +589,6 @@ a.brand { text-decoration: none; color: inherit; }
 .foot p { max-width: 80ch; }
 .foot a { color: var(--ink); text-underline-offset: 3px; text-decoration-color: var(--rule-strong); }
 .foot a:hover { text-decoration-color: var(--ink); }
-.credit { padding-top: 10px; border-top: 1px solid var(--rule); }
 
 /* ---------- Documentation ---------- */
 
